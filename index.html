@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Freedom Ledger</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ledger">
+<meta name="theme-color" content="#050605">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a heads-up display. Command rail on the left (top tabs on phones), glass instrument panels on a faint targeting grid.
+   Deliberately single-theme: wealth colours. Onyx ground, ivory text, gold as the primary glow, deep emerald for growth. */
+:root{
+  --acc-rgb:230,192,104;
+  --bg:#050605; --surface:rgba(18,21,18,.76); --sunk:rgba(8,11,9,.88); --line:rgba(230,192,104,.18); --line-hi:rgba(230,192,104,.5);
+  --ink:#f4efe3; --muted:#9e9886; --accent:#e6c068; --accent-ink:#1a1405;
+  --gold:#ffd36b; --good:#2fd18b; --warn:#f0a03c; --bad:#ff5a5f; --hot:#0f8a5c;
+  --glow:0 0 22px rgba(230,192,104,.28);
+  --display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body:"Inter", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);}
+.num,td.n,input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:1.5rem;letter-spacing:-.01em}
+h2{font-size:1.6rem;letter-spacing:-.015em}
+h3{font-size:1.05rem}
+a{color:var(--accent)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.rail{background:var(--sunk);border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;gap:24px;position:sticky;top:0;height:100vh}
+.brand small{display:block;color:var(--muted);font-size:.8rem;margin-top:4px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--ink);padding:9px 12px;border-radius:8px;font-weight:500}
+.nav a:hover{background:var(--line)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.rail .foot{margin-top:auto;font-size:.78rem;color:var(--muted)}
+main{padding-block:28px 64px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));min-width:0}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.page-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px}
+.page-head p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat .v{font-family:var(--mono);font-size:1.55rem;font-weight:600;letter-spacing:-.02em}
+.stat .s{color:var(--muted);font-size:.85rem}
+.pos{color:var(--good)} .neg{color:var(--bad)} .goldc{color:var(--gold)}
+
+.banner{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;background:var(--sunk);border:1px dashed var(--line);border-radius:10px;padding:10px 14px;font-size:.9rem}
+
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+tfoot td{font-weight:600;border-top:2px solid var(--line)}
+.cell{width:100%;min-width:70px;background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 6px}
+.cell:hover{border-color:var(--line)}
+.cell:focus{border-color:var(--accent);background:var(--bg);outline:none}
+input[type=number].cell{text-align:right}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:500;font-size:.9rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:4px 8px}
+.btn.ghost:hover{color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:wait}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);min-width:0}
+.field input,.field select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;color:var(--ink);font-size:.95rem;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.row .field{flex:1 1 140px}
+
+.bar{height:10px;background:var(--sunk);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar.gold>i{background:var(--gold)}
+.bar.over>i{background:var(--bad)}
+
+.chip{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.good{color:var(--good);border-color:currentColor}
+.chip.warn{color:var(--warn);border-color:currentColor}
+.chip.bad{color:var(--bad);border-color:currentColor}
+.chip.gold{color:var(--gold);border-color:currentColor}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 12px;cursor:pointer;font-size:.88rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+.goal{border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--surface)}
+.goal-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:start}
+.goal .big{font-family:var(--mono);font-size:1.3rem;font-weight:600}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kv div{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted)}
+.kv b{font-family:var(--mono);color:var(--ink);font-size:1rem;font-weight:600}
+details summary{cursor:pointer;color:var(--muted);font-size:.88rem}
+
+.cal{display:flex;flex-direction:column}
+.cal-item{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.cal-item:last-child{border-bottom:0}
+.date-badge{border:1px solid var(--line);border-radius:8px;text-align:center;padding:4px 0;background:var(--bg)}
+.date-badge b{display:block;font-family:var(--display);font-size:1.25rem;line-height:1}
+.date-badge span{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.84rem}
+.note{font-size:.85rem;color:var(--muted);border-left:3px solid var(--gold);padding:6px 12px;background:var(--sunk);border-radius:0 8px 8px 0}
+.err{color:var(--bad);font-size:.88rem}
+svg.chart{width:100%;height:auto;display:block}
+svg.chart text{fill:var(--muted);font:11px var(--mono)}
+.empty{color:var(--muted);font-size:.9rem;padding:8px 0}
+
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .seg{display:flex;flex-direction:column;width:100%}
+  .seg button{text-align:left}
+  .row>.field{flex-basis:100%}
+  .rail{position:sticky;top:0;height:auto;z-index:5;flex-direction:column;gap:10px;padding:12px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));border-right:0;border-bottom:1px solid var(--line)}
+  .rail .foot,.brand small{display:none}
+  .nav{flex-direction:row;overflow-x:auto;gap:4px}
+  .nav a{white-space:nowrap;padding:7px 10px}
+}
+@media (prefers-reduced-motion: no-preference){ .bar>i{transition:width .5s ease} }
+
+/* ===== HUD layer ===== */
+body{
+  background:
+    radial-gradient(1100px 620px at 78% -12%, rgba(var(--acc-rgb),.14), transparent 60%),
+    radial-gradient(760px 520px at -8% 108%, rgba(15,138,92,.16), transparent 60%),
+    linear-gradient(rgba(var(--acc-rgb),.035) 1px, transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg, rgba(var(--acc-rgb),.035) 1px, transparent 1px) 0 0/44px 44px,
+    var(--bg);
+  background-attachment:fixed;
+}
+h1,h2,h3{text-transform:uppercase;letter-spacing:.04em}
+h2{font-size:1.9rem;font-weight:700;background:linear-gradient(90deg,var(--ink) 40%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+h3{font-size:.95rem;letter-spacing:.12em;color:var(--accent)}
+.eyebrow{font-family:var(--mono);color:var(--accent);letter-spacing:.22em;font-weight:400;opacity:.85}
+.eyebrow::before{content:"▸ "}
+.page-head p{color:var(--muted)}
+
+.rail{background:linear-gradient(180deg,rgba(14,16,12,.94),rgba(5,6,5,.97));border-right:1px solid var(--line);box-shadow:inset -1px 0 0 rgba(var(--acc-rgb),.06)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{font-size:1.05rem;letter-spacing:.14em;line-height:1.2}
+.brand small{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);opacity:.7}
+.reactor{flex:0 0 38px;width:38px;height:38px;border-radius:50%;position:relative;
+  background:radial-gradient(circle,#fffaf0 0 14%,#fbe6a6 22%,rgba(var(--acc-rgb),.35) 38%,transparent 40%),
+    repeating-conic-gradient(rgba(var(--acc-rgb),.9) 0 18deg,transparent 18deg 30deg);
+  -webkit-mask:radial-gradient(circle,#000 0 41%,transparent 42% 55%,#000 56% 70%,transparent 71%);
+          mask:radial-gradient(circle,#000 0 41%,transparent 42% 55%,#000 56% 70%,transparent 71%);
+  filter:drop-shadow(0 0 8px rgba(var(--acc-rgb),.9))}
+.nav a{font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:.86rem;color:var(--muted);border:1px solid transparent;border-radius:4px;position:relative}
+.nav a:hover{background:rgba(var(--acc-rgb),.06);color:var(--ink);border-color:var(--line)}
+.nav a[aria-current="page"]{background:linear-gradient(90deg,rgba(var(--acc-rgb),.22),rgba(var(--acc-rgb),.04));color:var(--ink);border-color:var(--line-hi);box-shadow:var(--glow)}
+.nav a[aria-current="page"]::before{content:"";position:absolute;left:-1px;top:6px;bottom:6px;width:3px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.rail .foot{font-family:var(--mono);font-size:.68rem;line-height:1.6;border-top:1px solid var(--line);padding-top:12px}
+
+.hud-bar{max-width:1080px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:10px}
+.hud-bar b{color:var(--ink);font-weight:600}
+.hud-bar .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);margin-right:6px;vertical-align:1px}
+.hud-bar .dot.off{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.hud-bar .clock{margin-left:auto;color:var(--accent)}
+
+.panel,.goal{background:var(--surface);border:1px solid var(--line);border-radius:4px;position:relative;
+  -webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.35)}
+.panel::before,.panel::after,.goal::before,.goal::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border-color:var(--accent);border-style:solid;opacity:.9;filter:drop-shadow(0 0 4px var(--accent))}
+.panel::before,.goal::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.panel::after,.goal::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.stat .v{font-size:1.7rem;text-shadow:0 0 18px rgba(var(--acc-rgb),.35)}
+.stat .v.goldc{text-shadow:0 0 18px rgba(255,181,71,.4)}
+.stat .v.pos{text-shadow:0 0 18px rgba(63,245,176,.35)}
+.stat .v.neg{text-shadow:0 0 18px rgba(255,77,94,.4)}
+
+.banner{background:rgba(255,181,71,.06);border:1px solid rgba(255,181,71,.35);border-radius:4px}
+th{font-family:var(--mono);color:var(--accent);opacity:.75;letter-spacing:.14em;font-weight:400}
+td{border-bottom-color:rgba(80,210,255,.09)}
+tbody tr:hover td{background:rgba(var(--acc-rgb),.04)}
+.cell{border-radius:3px}
+.cell:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(var(--acc-rgb),.15),var(--glow);outline:none}
+.field{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
+.field input,.field select{background:var(--sunk);border-radius:3px;font-family:var(--body);letter-spacing:0;text-transform:none}
+select option{background:#0d100e;color:var(--ink)}
+
+.btn{font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:.8rem;background:rgba(var(--acc-rgb),.05);border-color:var(--line-hi);border-radius:3px;color:var(--ink)}
+.btn:hover{background:rgba(var(--acc-rgb),.14);box-shadow:var(--glow)}
+.btn.primary{background:linear-gradient(135deg,#fbe6a6,var(--accent) 55%,#b8892f);color:var(--accent-ink);border-color:transparent;font-weight:700;
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:none}
+.btn.primary:hover{filter:brightness(1.12) drop-shadow(0 0 10px rgba(var(--acc-rgb),.6))}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{color:var(--bad);box-shadow:none}
+
+.bar{height:8px;background:rgba(var(--acc-rgb),.07);border-color:var(--line);border-radius:2px}
+.bar>i{border-radius:2px;background:linear-gradient(90deg,#b8892f,var(--accent),#fff3c9);box-shadow:0 0 12px rgba(var(--acc-rgb),.7)}
+.bar.gold>i{background:linear-gradient(90deg,var(--hot),var(--gold));box-shadow:0 0 12px rgba(255,181,71,.6)}
+.chip{font-family:var(--mono);font-weight:400;text-transform:uppercase;letter-spacing:.12em;font-size:.64rem;border-radius:2px;background:rgba(255,255,255,.02)}
+.chip.good{background:rgba(63,245,176,.08)} .chip.warn{background:rgba(255,181,71,.08)} .chip.bad{background:rgba(255,77,94,.08)} .chip.gold{background:rgba(255,181,71,.1)}
+.seg{border-color:var(--line-hi);border-radius:3px}
+.seg button{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:.78rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:rgba(var(--acc-rgb),.2);color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.date-badge{background:rgba(var(--acc-rgb),.06);border-color:var(--line-hi);border-radius:3px}
+.date-badge b{color:var(--accent);text-shadow:0 0 10px rgba(var(--acc-rgb),.5)}
+.note{border-left-color:var(--gold);background:rgba(255,181,71,.06);border-radius:0 3px 3px 0}
+.kv b{color:var(--ink)}
+svg.chart path[stroke]{filter:drop-shadow(0 0 4px currentColor)}
+svg.chart text{font-size:10px}
+#importBox{background:var(--sunk)!important}
+
+/* overview hero */
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center;padding:24px}
+.gauge{--p:0;width:180px;height:180px;border-radius:50%;position:relative;display:grid;place-items:center;
+  background:
+    radial-gradient(circle,var(--bg) 0 56%,transparent 57%),
+    conic-gradient(var(--accent) calc(var(--p)*1%),rgba(var(--acc-rgb),.1) 0);
+  box-shadow:0 0 40px rgba(var(--acc-rgb),.25)}
+.gauge::before{content:"";position:absolute;inset:-10px;border-radius:50%;border:1px dashed var(--line-hi)}
+.gauge::after{content:"";position:absolute;inset:18%;border-radius:50%;border:1px solid var(--line)}
+.gauge .in{text-align:center;position:relative;z-index:1}
+.gauge .in b{display:block;font-family:var(--display);font-size:2.2rem;line-height:1;color:var(--ink);text-shadow:0 0 16px rgba(var(--acc-rgb),.6)}
+.gauge .in span{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 22px}
+.readout div{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line-hi);padding-left:12px}
+.readout span{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.readout b{font-family:var(--mono);font-size:1.25rem;font-weight:600}
+.hero .net{font-family:var(--display);font-size:2.6rem;font-weight:700;line-height:1;letter-spacing:.02em;text-shadow:0 0 24px rgba(var(--acc-rgb),.35)}
+@media (prefers-reduced-motion: no-preference){
+  .gauge::before{animation:spin 40s linear infinite}
+  .reactor{animation:pulse 3.2s ease-in-out infinite}
+  .page{animation:boot .45s ease-out both}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{filter:drop-shadow(0 0 14px rgba(var(--acc-rgb),1))}}
+@keyframes boot{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+[hidden]{display:none!important}
+main{padding-bottom:max(64px,env(safe-area-inset-bottom))}
+
+/* tappable tiles */
+.tap{cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s}
+.panel.tap:hover,.panel.tap:focus-visible{border-color:var(--line-hi);box-shadow:var(--glow),0 10px 30px rgba(0,0,0,.35)}
+.panel.tap:active{transform:scale(.99)}
+.stat.tap .s::after,.hint{content:" · details ›";color:var(--accent);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;white-space:nowrap}
+.readout .tap{border-radius:0 3px 3px 0;padding-block:4px}
+.readout .tap:hover,.readout .tap:focus-visible{background:rgba(var(--acc-rgb),.07);border-left-color:var(--accent)}
+
+/* detail sheet */
+.sheet{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet-back{position:absolute;inset:0;background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.sheet-card{position:relative;width:min(780px,100%);max-height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:rgba(11,13,11,.97)!important;gap:20px!important;padding:22px!important;outline:none}
+.sheet-card h3{font-size:1.1rem}
+.sheet-sec{display:flex;flex-direction:column;gap:10px}
+.stack{display:flex;height:20px;border-radius:2px;overflow:hidden;border:1px solid var(--line)}
+.stack i{display:block;min-width:2px}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg>i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.hbars{display:flex;flex-direction:column;gap:12px}
+.hb{display:flex;flex-direction:column;gap:5px}
+.hb-l{display:flex;justify-content:space-between;gap:10px;font-size:.88rem}
+.bar{position:relative}
+.bar em{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.75}
+.tips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:tip}
+.tips li{counter-increment:tip;display:grid;grid-template-columns:28px minmax(0,1fr);gap:3px 12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:rgba(var(--acc-rgb),.03)}
+.tips li::before{content:counter(tip,decimal-leading-zero);grid-row:span 3;font-family:var(--mono);color:var(--accent);font-size:.8rem;padding-top:2px}
+.tips li span{color:var(--muted);font-size:.9rem}
+.tips li .btn{justify-self:start;margin-top:6px}
+@media (max-width:820px){
+  .sheet{place-items:end center;padding:max(40px,env(safe-area-inset-top,0px)) 0 0}
+  .sheet-card{border-radius:14px 14px 0 0!important;max-height:100%;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important}
+  input,select,textarea,.cell{font-size:16px!important}
+  .rail{padding-top:max(12px,env(safe-area-inset-top,0px))}
+}
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .readout div{text-align:left}
+  .hud-bar .clock{margin-left:0}
+  .nav{scrollbar-width:none} .nav::-webkit-scrollbar{display:none}
+  .brand h1{font-size:.95rem}
+  .reactor{flex-basis:28px;width:28px;height:28px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><span class="reactor" aria-hidden="true"></span><div><h1>Freedom Ledger</h1><small>Wealth command</small></div></div>
+    <nav class="nav" id="nav">
+      <a href="#overview">Overview</a>
+      <a href="#budget">Budget</a>
+      <a href="#debt">Debt payoff</a>
+      <a href="#goals">Goals</a>
+      <a href="#invest">Invest &amp; dividends</a>
+      <a href="#setup">Setup</a>
+    </nav>
+    <div class="foot">Market data: Alpha Vantage. Exchange rates: Frankfurter. Both found via the public-apis list.</div>
+  </aside>
+  <main><div class="hud-bar" id="hud" aria-live="off"></div><div class="page" id="view"></div></main>
+</div>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-back" data-close></div>
+  <div class="panel sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+    <div class="panel-head"><h3 id="sheet-title"></h3><button class="btn" data-close>Close</button></div>
+    <div id="sheet-body" style="display:flex;flex-direction:column;gap:22px"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* MODE: "local" = PC version (live data, PC server sync); "online" = claude.ai page (saves to your Claude account, no live data);
+   "pwa" = installable offline phone app. build-online.ps1 / build-pwa.ps1 set this. */
+const MODE = "pwa";
+/* ---------- storage ---------- */
+const KEY = "freedomLedger.v1", CKEY = "freedomLedger.cache.v1";
+const uid = () => Math.random().toString(36).slice(2, 10);
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const todayISO = () => ymd(new Date());
+
+function sampleState(){
+  const y = new Date().getFullYear();
+  return {
+    isSample: true,
+    settings: { currency: "USD", avKey: "demo", invReturn: 7, invMonthly: 200, invStart: 1000, invYears: 20 },
+    income: [ {id:uid(), name:"Salary (after tax)", amount:4200}, {id:uid(), name:"Side work", amount:350} ],
+    expenses: [
+      {id:uid(), name:"Rent", kind:"need", budget:1300, spent:1300},
+      {id:uid(), name:"Groceries", kind:"need", budget:450, spent:392},
+      {id:uid(), name:"Transport", kind:"need", budget:220, spent:241},
+      {id:uid(), name:"Utilities", kind:"need", budget:180, spent:166},
+      {id:uid(), name:"Phone & internet", kind:"need", budget:90, spent:90},
+      {id:uid(), name:"Eating out", kind:"want", budget:160, spent:204},
+      {id:uid(), name:"Subscriptions", kind:"want", budget:45, spent:45},
+      {id:uid(), name:"Entertainment", kind:"want", budget:120, spent:60}
+    ],
+    debts: [
+      {id:uid(), name:"Credit card", balance:4800, apr:22.9, minPay:145},
+      {id:uid(), name:"Store card", balance:1200, apr:26, minPay:60},
+      {id:uid(), name:"Car loan", balance:9500, apr:7.5, minPay:260},
+      {id:uid(), name:"Student loan", balance:14000, apr:5, minPay:150}
+    ],
+    extraPayment: 300, strategy: "avalanche",
+    goals: [
+      {id:uid(), name:"Emergency fund", target:6000, deadline:(y+1)+"-12-31", contributions:[
+        {id:uid(), date:y+"-08-01", amount:500, note:"Started"}, {id:uid(), date:y+"-09-01", amount:250, note:""},
+        {id:uid(), date:y+"-10-01", amount:250, note:""}, {id:uid(), date:y+"-11-01", amount:300, note:"Bonus"} ]},
+      {id:uid(), name:"Holiday", target:2500, deadline:(y+1)+"-06-30", contributions:[
+        {id:uid(), date:y+"-10-15", amount:200, note:""} ]}
+    ],
+    holdings: [ {id:uid(), symbol:"IBM", shares:10} ]
+  };
+}
+function blankState(){
+  const s = sampleState();
+  return { isSample:false, settings:s.settings, income:[], expenses:[], debts:[], extraPayment:0, strategy:"avalanche", goals:[], holdings:[] };
+}
+function load(){ try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch(e){} return sampleState(); }
+let S = load();
+/* Sync with the PC server (when the page is opened through it). The server's file is the shared copy; newest edit wins. */
+const SERVER = MODE === "local" && /^https?:$/.test(location.protocol);
+const qs = new URLSearchParams(location.search);
+let syncKey = qs.get("k") || (() => { try { return localStorage.getItem("freedomLedger.key") || ""; } catch(e){ return ""; } })();
+try { if (qs.get("k")) localStorage.setItem("freedomLedger.key", qs.get("k")); } catch(e){}
+let sync = SERVER || MODE === "online" ? "connecting" : "local", pushTimer = null;
+function save(){
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (SERVER && sync !== "denied"){ clearTimeout(pushTimer); pushTimer = setTimeout(push, 500); }
+  if (MODE === "online") queueCloud();
+}
+
+/* Online version: one private document per person in this page's store (data/users/<id>/ledger). */
+let cloudRef = null, cloudBusy = false, cloudDirty = false, cloudTimer = null, cloudRetried = false;
+function trimMarket(){
+  const out = {};
+  for (const [k, v] of Object.entries(C)){
+    if (k.startsWith("DIVIDENDS:")) out[k] = { t:v.t, d:{ data:((v.d && v.d.data) || []).slice(0, 24) } };
+    else out[k] = v;
+  }
+  return out;
+}
+function persistLocal(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} saveCache(); }
+function queueCloud(now){ if (!cloudRef) return; clearTimeout(cloudTimer); cloudTimer = setTimeout(flushCloud, now ? 50 : 700); }
+async function flushCloud(){
+  if (!cloudRef) return;
+  if (cloudBusy){ cloudDirty = true; return; }
+  cloudBusy = true;
+  try { await cloudRef.set({ state: JSON.parse(JSON.stringify(S)), market: trimMarket(), updatedAt: S.updatedAt || 0 }); sync = "linked"; cloudRetried = false; }
+  catch(e){
+    const c = e && e.code;
+    if (c === "unavailable" && !cloudRetried){ cloudRetried = true; setTimeout(flushCloud, 1500 + Math.random() * 1500); }
+    sync = c === "quota_exceeded" ? "full" : (c === "invalid_argument" || c === "revoked" || c === "not_granted") ? "device" : "offline";
+  }
+  cloudBusy = false; hud();
+  if (cloudDirty){ cloudDirty = false; flushCloud(); }
+}
+async function cloudInit(){
+  try {
+    if (!window.claude || !window.claude.use){ sync = "device"; hud(); return; }
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    const id = user ? await user.id() : null;
+    if (!db || !id){ sync = "device"; hud(); return; }
+    cloudRef = db.doc("data/users/" + id + "/ledger");
+    let answered = false;
+    const timer = setTimeout(() => { if (!answered){ sync = "offline"; hud(); } }, 10000);
+    cloudRef.onSnapshot(snap => {
+      if (!snap.metadata.fromCache){ answered = true; clearTimeout(timer); }
+      if (snap.metadata.hasPendingWrites) return;
+      if (!snap.exists){ if (!snap.metadata.fromCache){ sync = "linked"; queueCloud(true); hud(); } return; }
+      const d = snap.data() || {};
+      sync = "linked";
+      if ((d.updatedAt || 0) > (S.updatedAt || 0) && d.state){
+        S = JSON.parse(JSON.stringify(d.state));
+        if (d.market) C = Object.assign({}, C, JSON.parse(JSON.stringify(d.market)));
+        persistLocal(); render(); if (openKey) openDetail(openKey);
+      } else if ((d.updatedAt || 0) < (S.updatedAt || 0)) queueCloud();
+      hud();
+    }, err => { clearTimeout(timer); sync = err && err.code === "revoked" ? "device" : "offline"; hud(); });
+  } catch(e){ sync = "device"; hud(); }
+}
+function api(method, body){
+  return fetch("api/state", { method, cache:"no-store", headers: Object.assign({"Content-Type":"application/json"}, syncKey ? {"X-Ledger-Key": syncKey} : {}), body: body ? JSON.stringify(body) : undefined });
+}
+async function push(){ try { const r = await api("PUT", S); sync = r.ok ? "linked" : r.status === 401 ? "denied" : "offline"; } catch(e){ sync = "offline"; } hud(); }
+async function pull(){
+  if (!SERVER) return;
+  try {
+    const r = await api("GET");
+    if (r.status === 401) sync = "denied";
+    else if (r.status === 204){ sync = "linked"; await push(); }
+    else if (r.ok){
+      const d = await r.json(); sync = "linked";
+      if (d && d.settings && (d.updatedAt || 0) >= (S.updatedAt || 0)){
+        S = d; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+        render(); if (openKey) openDetail(openKey);
+      } else await push();
+    } else sync = "offline";
+  } catch(e){ sync = "offline"; }
+  hud();
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pull(); });
+let C = (()=>{ try { return JSON.parse(localStorage.getItem(CKEY)) || {}; } catch(e){ return {}; } })();
+function saveCache(){ try { localStorage.setItem(CKEY, JSON.stringify(C)); } catch(e){} }
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const sum = (a, f) => a.reduce((t, x) => t + num(f(x)), 0);
+function money(v, cur, dp){ cur = cur || S.settings.currency;
+  try { return new Intl.NumberFormat(undefined, {style:"currency", currency:cur, maximumFractionDigits: dp ?? (Math.abs(v) < 100 ? 2 : 0)}).format(v); }
+  catch(e){ return cur + " " + Number(v).toFixed(2); } }
+const pct = v => (isFinite(v) ? v : 0).toFixed(1) + "%";
+function fmtDate(iso, opts){ if (!iso) return "—"; const d = new Date(iso + "T00:00:00"); return isNaN(d) ? "—" : d.toLocaleDateString(undefined, opts || {day:"numeric", month:"short", year:"numeric"}); }
+function addMonths(n){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + n); return d; }
+const monthLabel = d => d.toLocaleDateString(undefined, {month:"short", year:"numeric"});
+function monthsBetween(fromISO, toISO){ const a = new Date(fromISO), b = new Date(toISO); return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth()) + (b.getDate() >= a.getDate() ? 0 : -1); }
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+
+/* ---------- core maths ---------- */
+function totals(){
+  const income = sum(S.income, x => x.amount);
+  const budgeted = sum(S.expenses, x => x.budget), spent = sum(S.expenses, x => x.spent);
+  const debtMin = sum(S.debts.filter(d => num(d.balance) > 0), d => d.minPay);
+  const debtPay = debtMin + num(S.extraPayment);
+  const left = income - budgeted - debtPay;
+  return { income, budgeted, spent, debtMin, debtPay, left,
+    needs: sum(S.expenses.filter(e => e.kind === "need"), e => e.budget),
+    wants: sum(S.expenses.filter(e => e.kind === "want"), e => e.budget),
+    debtTotal: sum(S.debts, d => d.balance) };
+}
+
+/* Month-by-month payoff simulation. Every month the full budget (all minimums + extra) is paid;
+   freed-up minimums roll into the target debt ("snowball/avalanche roll-over"). */
+function simulate(debts, extra, strategy){
+  let ds = debts.filter(d => num(d.balance) > 0).map(d => ({ name:d.name, bal:num(d.balance), r:num(d.apr)/1200, min:num(d.minPay), paidOff:null, interest:0 }));
+  const budget = sum(ds, d => d.min) + num(extra);
+  const series = [sum(ds, d => d.bal)];
+  let month = 0, totalInterest = 0;
+  while (ds.some(d => d.bal > 0.005) && month < 600){
+    month++;
+    ds.forEach(d => { if (d.bal > 0){ const i = d.bal * d.r; d.bal += i; d.interest += i; totalInterest += i; } });
+    let pool = budget;
+    ds.forEach(d => { if (d.bal > 0){ const p = Math.min(d.min, d.bal, pool); d.bal -= p; pool -= p; } });
+    const order = ds.filter(d => d.bal > 0.005).sort(strategy === "snowball" ? (a,b) => a.bal - b.bal : (a,b) => b.r - a.r || a.bal - b.bal);
+    for (const d of order){ if (pool <= 0) break; const p = Math.min(pool, d.bal); d.bal -= p; pool -= p; }
+    ds.forEach(d => { if (d.bal <= 0.005 && d.paidOff === null){ d.bal = 0; d.paidOff = month; } });
+    series.push(sum(ds, d => d.bal));
+    if (month > 24 && series[month] >= series[month - 12]) return { never:true, series, totalInterest, months:month, debts:ds };
+  }
+  return { never: month >= 600, months:month, totalInterest, series, debts:ds.sort((a,b) => (a.paidOff ?? 9e9) - (b.paidOff ?? 9e9)) };
+}
+
+function goalStats(g){
+  const saved = sum(g.contributions || [], c => c.amount), target = num(g.target);
+  const remaining = Math.max(0, target - saved), p = target > 0 ? Math.min(100, saved / target * 100) : 0;
+  let monthsLeft = g.deadline ? Math.max(0, monthsBetween(todayISO(), g.deadline)) : null;
+  const perMonth = monthsLeft === null ? null : remaining / Math.max(1, monthsLeft);
+  const cs = (g.contributions || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+  let avg = 0;
+  if (cs.length){ const span = Math.max(1, monthsBetween(cs[0].date, todayISO()) + 1); avg = saved / span; }
+  const eta = avg > 0 && remaining > 0 ? addMonths(Math.ceil(remaining / avg)) : null;
+  return { saved, target, remaining, p, monthsLeft, perMonth, avg, eta, done: remaining <= 0 && target > 0 };
+}
+
+/* ---------- market data (Alpha Vantage + Frankfurter) ---------- */
+const TTL = 12 * 3600 * 1000;
+async function av(fn, symbol, force){
+  const k = fn + ":" + symbol.toUpperCase();
+  if (MODE === "online"){
+    if (C[k]) return C[k].d;
+    throw new Error("Live market data only works in the PC version. Bring a snapshot across with Copy backup, or add dividend dates yourself below.");
+  }
+  if (!force && C[k] && Date.now() - C[k].t < TTL) return C[k].d;
+  const key = (S.settings.avKey || "demo").trim();
+  const url = "https://www.alphavantage.co/query?function=" + fn + "&symbol=" + encodeURIComponent(symbol) + "&apikey=" + encodeURIComponent(key);
+  const r = await fetch(url); if (!r.ok) throw new Error("Alpha Vantage answered " + r.status);
+  const j = await r.json();
+  if (j["Error Message"]) throw new Error("Alpha Vantage doesn't recognise " + symbol + ". Check the ticker.");
+  if (j.Information || j.Note){
+    const msg = String(j.Information || j.Note);
+    if (/demo/i.test(msg)) throw new Error("The demo key only works for IBM. Add your free Alpha Vantage key in Settings.");
+    throw new Error("Alpha Vantage limit reached (free keys allow 25 requests a day). Cached data is shown where available.");
+  }
+  C[k] = { t: Date.now(), d: j }; saveCache(); return j;
+}
+const cached = (fn, s) => C[fn + ":" + s.toUpperCase()]?.d;
+
+async function fxRate(){
+  const cur = S.settings.currency; if (cur === "USD") return 1;
+  const k = "fx:USD:" + cur;
+  if (MODE === "online") return fxCached();
+  if (C[k] && Date.now() - C[k].t < TTL) return C[k].d;
+  try { const r = await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=" + cur); const j = await r.json();
+    const rate = j.rates?.[cur]; if (rate){ C[k] = {t:Date.now(), d:rate}; saveCache(); return rate; } } catch(e){}
+  return C[k]?.d || null;
+}
+function fxCached(){
+  if (S.settings.currency === "USD") return 1;
+  const live = C["fx:USD:" + S.settings.currency]?.d || null, manual = num(S.settings.manualFx) || null;
+  return MODE === "online" ? (manual || live) : (live || manual);
+}
+
+function priceOf(sym){
+  const q = cached("GLOBAL_QUOTE", sym)?.["Global Quote"];
+  if (q && q["05. price"]) return { price: num(q["05. price"]), change: q["10. change percent"] };
+  const h = S.holdings.find(x => (x.symbol || "").toUpperCase() === String(sym).toUpperCase() && num(x.price) > 0);
+  return h ? { price: num(h.price), change: null, manual: true } : null;
+}
+function divsOf(sym){
+  const d = cached("DIVIDENDS", sym)?.data;
+  const man = (S.manualDivs || []).filter(x => (x.sym || "").toUpperCase() === String(sym).toUpperCase() && x.ex)
+    .map(x => ({ ex:x.ex, pay:x.pay || null, decl:null, amount:num(x.amount), manual:true }));
+  if (!Array.isArray(d) && !man.length) return null;
+  const api = (Array.isArray(d) ? d : []).map(x => ({ ex: x.ex_dividend_date !== "None" ? x.ex_dividend_date : null, pay: x.payment_date !== "None" ? x.payment_date : null,
+    decl: x.declaration_date !== "None" ? x.declaration_date : null, amount: num(x.amount) })).filter(x => x.ex);
+  return api.concat(man.filter(m => !api.some(a => a.ex === m.ex))).sort((a,b) => b.ex.localeCompare(a.ex));
+}
+function divProfile(sym){
+  const h = divsOf(sym); if (!h || !h.length) return null;
+  const yearAgo = new Date(Date.now() - 365*86400000).toISOString().slice(0,10);
+  const ttm = sum(h.filter(x => x.ex > yearAgo), x => x.amount);
+  const gaps = []; for (let i = 0; i < Math.min(5, h.length - 1); i++) gaps.push(daysBetween(h[i+1].ex, h[i].ex));
+  gaps.sort((a,b) => a-b); const interval = gaps.length ? gaps[Math.floor(gaps.length/2)] : 365;
+  const perYear = Math.max(1, Math.round(365 / interval));
+  const freq = perYear >= 11 ? "Monthly" : perYear >= 4 ? "Quarterly" : perYear >= 2 ? "Semi-annual" : "Annual";
+  return { history:h, ttm, interval, freq, latest:h[0] };
+}
+/* Upcoming events for the next 12 months: announced ones first, then estimates from the usual interval. */
+function upcomingEvents(sym, shares){
+  const p = divProfile(sym); if (!p) return [];
+  const today = todayISO(), horizon = new Date(Date.now() + 365*86400000).toISOString().slice(0,10);
+  const ev = [];
+  p.history.filter(x => (x.pay && x.pay >= today) || x.ex >= today).forEach(x => ev.push({ sym, ex:x.ex, pay:x.pay, amount:x.amount, est:false, shares }));
+  const L = p.latest, lag = L.pay ? daysBetween(L.ex, L.pay) : 30;
+  let ex = new Date(L.ex + "T00:00:00");
+  for (let i = 0; i < 14; i++){
+    ex = new Date(ex.getTime() + p.interval * 86400000);
+    const exI = ex.toISOString().slice(0,10); if (exI > horizon) break;
+    if (exI < today) continue;
+    const pay = new Date(ex.getTime() + lag * 86400000).toISOString().slice(0,10);
+    if (!ev.some(e => Math.abs(daysBetween(e.ex, exI)) < p.interval / 2)) ev.push({ sym, ex:exI, pay, amount:L.amount, est:true, shares });
+  }
+  return ev;
+}
+
+/* ---------- charts ---------- */
+function lineChart(seriesList, opts){
+  const W = 640, H = 220, pl = 58, pr = 12, pt = 12, pb = 28;
+  const n = Math.max(...seriesList.map(s => s.data.length)); if (n < 2) return "";
+  const max = Math.max(1, ...seriesList.flatMap(s => s.data));
+  const x = i => pl + (W - pl - pr) * i / (n - 1), y = v => pt + (H - pt - pb) * (1 - v / max);
+  let g = "";
+  for (let t = 0; t <= 4; t++){ const v = max * t / 4; g += `<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end">${esc(money(v, opts.cur, 0))}</text>`; }
+  const ticks = Math.min(6, n - 1);
+  for (let t = 0; t <= ticks; t++){ const i = Math.round((n - 1) * t / ticks); g += `<text x="${x(i)}" y="${H-8}" text-anchor="middle">${esc(opts.xl(i))}</text>`; }
+  const paths = seriesList.map(s => {
+    const d = s.data.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join("");
+    const area = s.fill ? `<path d="${d}L${x(s.data.length-1)} ${y(0)}L${x(0)} ${y(0)}Z" fill="${s.color}" fill-opacity=".12" stroke="none"/>` : "";
+    const li = s.data.length - 1;
+    return area + `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/><circle cx="${x(li)}" cy="${y(s.data[li])}" r="3.5" fill="${s.color}"/>`;
+  }).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">${g}${paths}</svg>`;
+}
+const legend = items => `<div class="row small muted">${items.map(([c,t,dash]) => `<span style="display:inline-flex;align-items:center;gap:6px"><svg width="22" height="8"><line x1="0" x2="22" y1="4" y2="4" stroke="${c}" stroke-width="2.5" ${dash?'stroke-dasharray="5 3"':''}/></svg>${esc(t)}</span>`).join("")}</div>`;
+
+/* ---------- views ---------- */
+const sampleBanner = () => S.isSample ? `<div class="banner"><span><span class="chip warn">Example numbers</span> &nbsp;These figures are made up so you can see how it works. Edit them, or start with a clean ledger.</span><button class="btn" data-act="startFresh">Start fresh</button></div>` : "";
+
+function viewOverview(){
+  const t = totals(), sim = simulate(S.debts, S.extraPayment, S.strategy);
+  const goals = S.goals.map(g => ({g, s:goalStats(g)}));
+  const gSaved = sum(goals, x => x.s.saved), gTarget = sum(goals, x => x.s.target);
+  const fx = fxCached();
+  const annualDiv = sum(S.holdings, h => (divProfile(h.symbol)?.ttm || 0) * num(h.shares));
+  const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares))).sort((a,b) => (a.pay||a.ex).localeCompare(b.pay||b.ex)).slice(0, 4);
+  const debtFree = S.debts.length && !sim.never ? monthLabel(addMonths(sim.months)) : (S.debts.length ? "Not on track" : "Debt-free");
+  const portVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0);
+  const net = gSaved + portVal - t.debtTotal;
+  const gp = gTarget ? Math.min(100, gSaved / gTarget * 100) : 0;
+  return `
+  <div class="page-head"><div><div class="eyebrow">${new Date().toLocaleDateString(undefined,{month:"long",year:"numeric"})}</div><h2>Where your money stands</h2>
+  <p>Every month: cover your needs, attack your debt, feed your goals, and let what's left start earning dividends.</p></div></div>
+  ${sampleBanner()}
+  <div class="panel hero tap" ${tap("net")}>
+    <div class="gauge" style="--p:${gp.toFixed(1)}" role="img" aria-label="Goals ${gp.toFixed(0)} percent funded"><div class="in"><b>${gp.toFixed(0)}%</b><span>Goals funded</span></div></div>
+    <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+      <div><div class="eyebrow">Net position</div><div class="net ${net >= 0 ? "pos" : "neg"}">${money(net)}</div>
+        <div class="small muted">Goal savings${fx ? " + shares" : ""} minus debt <span class="hint">· forecast ›</span></div></div>
+      <div class="readout">
+        <div class="tap" ${tap("left")}><span>Cash flow / month</span><b class="${t.left >= 0 ? "pos" : "neg"}">${money(t.left)}</b></div>
+        <div class="tap" ${tap("debt")}><span>Debt-free</span><b>${esc(debtFree)}</b></div>
+        <div class="tap" ${tap("div")}><span>Dividends / yr</span><b class="goldc">${money(annualDiv, "USD")}</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid g4">
+    <div class="panel stat tap" ${tap("left")}><span class="eyebrow">Left over this month</span><span class="v ${t.left >= 0 ? "pos" : "neg"}">${money(t.left)}</span><span class="s">after budget and debt payments</span></div>
+    <div class="panel stat tap" ${tap("debt")}><span class="eyebrow">Total debt</span><span class="v">${money(t.debtTotal)}</span><span class="s">Debt-free: <b>${esc(debtFree)}</b></span></div>
+    <div class="panel stat tap" ${tap("goals")}><span class="eyebrow">Saved toward goals</span><span class="v">${money(gSaved)}</span><span class="s">${gTarget ? pct(gSaved/gTarget*100) + " of " + money(gTarget) : "No goals yet"}</span></div>
+    <div class="panel stat tap" ${tap("div")}><span class="eyebrow">Dividend income / yr</span><span class="v goldc">${money(annualDiv, "USD")}</span><span class="s">${fx && S.settings.currency !== "USD" ? "≈ " + money(annualDiv * fx) + " · " : ""}based on last 12 months</span></div>
+  </div>
+  <div class="grid g2">
+    <div class="panel"><div class="panel-head"><h3>Goals</h3><a href="#goals" class="small">Open goals</a></div>
+      ${goals.length ? goals.map(({g,s}) => `<div style="display:flex;flex-direction:column;gap:6px"><div class="panel-head small"><b>${esc(g.name)}</b><span class="num">${money(s.saved)} / ${money(s.target)}</span></div><div class="bar"><i style="width:${s.p}%"></i></div><span class="small muted">${s.done ? "Reached" : money(s.remaining) + " to go" + (s.perMonth !== null ? " · " + money(s.perMonth) + "/month to hit it by " + fmtDate(g.deadline) : "")}</span></div>`).join("") : `<p class="empty">Add a goal to track your progress.</p>`}
+    </div>
+    <div class="panel"><div class="panel-head"><h3>Next dividend payments</h3><a href="#invest" class="small">Open calendar</a></div>
+      ${ev.length ? calendarList(ev) : `<p class="empty">Add holdings and press “Refresh market data” on the Invest page to see dividend dates.</p>`}
+    </div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Debt balance over time</h3><a href="#debt" class="small">Open payoff plan</a></div>
+    ${S.debts.length ? lineChart([{data:simulate(S.debts,0,S.strategy).series, color:"var(--muted)", dash:true},{data:sim.series, color:"var(--accent)", fill:true}], {label:"Debt balance", fmt:v=>money(v), xl:i=>monthLabel(addMonths(i))}) + legend([["var(--accent)","Your plan"],["var(--muted)","Minimum payments only",1]]) : `<p class="empty">No debts recorded.</p>`}
+  </div>`;
+}
+
+function viewBudget(){
+  const t = totals();
+  const kinds = {need:"Need", want:"Want", save:"Savings"};
+  const rows = S.expenses.map(e => { const over = num(e.spent) > num(e.budget);
+    return `<tr><td><input class="cell" data-c="expenses" data-id="${e.id}" data-f="name" value="${esc(e.name)}" aria-label="Category name"></td>
+      <td><select class="cell" data-c="expenses" data-id="${e.id}" data-f="kind" aria-label="Type">${Object.entries(kinds).map(([k,v]) => `<option value="${k}" ${e.kind===k?"selected":""}>${v}</option>`).join("")}</select></td>
+      <td class="n"><input class="cell" type="number" step="any" data-c="expenses" data-id="${e.id}" data-f="budget" value="${num(e.budget)}" aria-label="Budget"></td>
+      <td class="n"><input class="cell" type="number" step="any" data-c="expenses" data-id="${e.id}" data-f="spent" value="${num(e.spent)}" aria-label="Spent"></td>
+      <td class="n num ${over ? "neg" : "pos"}">${money(num(e.budget) - num(e.spent))}</td>
+      <td><button class="btn ghost" data-act="del" data-c="expenses" data-id="${e.id}" aria-label="Remove">✕</button></td></tr>`; }).join("");
+  const inc = S.income.map(i => `<tr><td><input class="cell" data-c="income" data-id="${i.id}" data-f="name" value="${esc(i.name)}" aria-label="Income name"></td>
+      <td class="n"><input class="cell" type="number" step="any" data-c="income" data-id="${i.id}" data-f="amount" value="${num(i.amount)}" aria-label="Amount"></td>
+      <td><button class="btn ghost" data-act="del" data-c="income" data-id="${i.id}" aria-label="Remove">✕</button></td></tr>`).join("");
+  const savingsPart = t.debtPay + Math.max(0, t.left) + sum(S.expenses.filter(e => e.kind === "save"), e => e.budget);
+  const split = [["Needs", t.needs, 50], ["Wants", t.wants, 30], ["Debt & savings", savingsPart, 20]];
+  return `
+  <div class="page-head"><div><div class="eyebrow">Monthly budget</div><h2>Give every rand, dollar or pound a job</h2>
+  <p>Enter what comes in and what you plan to spend. Update “Spent” as the month goes, and the ledger shows what's left.</p></div></div>
+  ${sampleBanner()}
+  <div class="grid g4">
+    <div class="panel stat tap" ${tap("left")}><span class="eyebrow">Income</span><span class="v">${money(t.income)}</span></div>
+    <div class="panel stat"><span class="eyebrow">Budgeted spending</span><span class="v">${money(t.budgeted)}</span><span class="s">${money(t.spent)} spent so far</span></div>
+    <div class="panel stat"><span class="eyebrow">Debt payments</span><span class="v">${money(t.debtPay)}</span><span class="s">minimums + ${money(num(S.extraPayment))} extra</span></div>
+    <div class="panel stat tap" ${tap("left")}><span class="eyebrow">Unassigned</span><span class="v ${t.left>=0?"pos":"neg"}">${money(t.left)}</span><span class="s">${t.left>=0 ? "send to goals or investing" : "budget is over your income"}</span></div>
+  </div>
+  <div class="grid g2">
+    <div class="panel"><div class="panel-head"><h3>Income</h3><button class="btn" data-act="addIncome">+ Add income</button></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Source</th><th class="n">Per month</th><th></th></tr></thead><tbody>${inc || `<tr><td colspan="3" class="empty">No income added yet.</td></tr>`}</tbody>
+      <tfoot><tr><td>Total</td><td class="n num">${money(t.income)}</td><td></td></tr></tfoot></table></div></div>
+    <div class="panel"><h3>The 50 / 30 / 20 check</h3><p class="small muted" style="margin:0">A common rule of thumb: about half on needs, under a third on wants, and at least a fifth on debt and savings.</p>
+      ${split.map(([n,v,goal]) => { const p = t.income ? v / t.income * 100 : 0; const okay = n === "Debt & savings" ? p >= goal : p <= goal;
+        return `<div style="display:flex;flex-direction:column;gap:5px"><div class="panel-head small"><b>${n}</b><span class="num">${pct(p)} <span class="muted">· aim ${n==="Debt & savings"?"≥":"≤"}${goal}%</span> <span class="chip ${okay?"good":"warn"}">${okay?"On track":"Look at this"}</span></span></div><div class="bar ${okay?"":"gold"}"><i style="width:${Math.min(100,p)}%"></i></div></div>`; }).join("")}
+    </div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Spending categories</h3><button class="btn" data-act="addExpense">+ Add category</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Category</th><th>Type</th><th class="n">Budget</th><th class="n">Spent</th><th class="n">Left</th><th></th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="6" class="empty">No categories yet.</td></tr>`}</tbody>
+    <tfoot><tr><td>Total</td><td></td><td class="n num">${money(t.budgeted)}</td><td class="n num">${money(t.spent)}</td><td class="n num ${t.budgeted-t.spent>=0?"pos":"neg"}">${money(t.budgeted - t.spent)}</td><td></td></tr></tfoot></table></div>
+  </div>`;
+}
+
+function viewDebt(){
+  const sim = simulate(S.debts, S.extraPayment, S.strategy), base = simulate(S.debts, 0, S.strategy);
+  const other = simulate(S.debts, S.extraPayment, S.strategy === "avalanche" ? "snowball" : "avalanche");
+  const rows = S.debts.map(d => `<tr><td><input class="cell" data-c="debts" data-id="${d.id}" data-f="name" value="${esc(d.name)}" aria-label="Debt name"></td>
+    <td class="n"><input class="cell" type="number" step="any" data-c="debts" data-id="${d.id}" data-f="balance" value="${num(d.balance)}" aria-label="Balance"></td>
+    <td class="n"><input class="cell" type="number" step="any" data-c="debts" data-id="${d.id}" data-f="apr" value="${num(d.apr)}" aria-label="Interest rate"></td>
+    <td class="n"><input class="cell" type="number" step="any" data-c="debts" data-id="${d.id}" data-f="minPay" value="${num(d.minPay)}" aria-label="Minimum payment"></td>
+    <td class="n num muted">${money(num(d.balance) * num(d.apr) / 1200)}</td>
+    <td><button class="btn ghost" data-act="del" data-c="debts" data-id="${d.id}" aria-label="Remove">✕</button></td></tr>`).join("");
+  const saved = base.never ? null : base.totalInterest - sim.totalInterest;
+  const order = sim.debts.map((d, i) => `<div class="cal-item"><div class="date-badge"><b>${i+1}</b><span>pay off</span></div><div><b>${esc(d.name)}</b><div class="small muted">Interest paid: ${money(d.interest)}</div></div><span class="chip ${d.paidOff ? "good" : "bad"}">${d.paidOff ? monthLabel(addMonths(d.paidOff)) : "Not paid off"}</span></div>`).join("");
+  return `
+  <div class="page-head"><div><div class="eyebrow">Get out of debt</div><h2>Your payoff plan</h2>
+  <p>Pay the minimum on everything, then throw every extra amount at one debt. When it's gone, its payment rolls into the next one.</p></div></div>
+  ${sampleBanner()}
+  <div class="panel"><div class="panel-head"><h3>Your debts</h3><button class="btn" data-act="addDebt">+ Add debt</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Debt</th><th class="n">Balance</th><th class="n">Interest % / yr</th><th class="n">Minimum / month</th><th class="n">Interest / month</th><th></th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="6" class="empty">No debts. Add one to build a plan.</td></tr>`}</tbody>
+    <tfoot><tr><td>Total</td><td class="n num">${money(sum(S.debts,d=>d.balance))}</td><td></td><td class="n num">${money(sum(S.debts,d=>d.minPay))}</td><td class="n num">${money(sum(S.debts,d=>num(d.balance)*num(d.apr)/1200))}</td><td></td></tr></tfoot></table></div>
+    <div class="row">
+      <label class="field" style="max-width:220px">Extra payment per month<input id="extraPayment" type="number" step="any" min="0" value="${num(S.extraPayment)}" data-root="extraPayment"></label>
+      <div class="field"><span>Strategy</span><div class="seg" role="group" aria-label="Strategy">
+        <button data-act="strategy" data-v="avalanche" aria-pressed="${S.strategy==="avalanche"}">Avalanche · highest interest first</button>
+        <button data-act="strategy" data-v="snowball" aria-pressed="${S.strategy==="snowball"}">Snowball · smallest balance first</button></div></div>
+    </div>
+  </div>
+  ${S.debts.length ? `
+  <div class="grid g4">
+    <div class="panel stat tap" ${tap("debt")}><span class="eyebrow">Debt-free</span><span class="v ${sim.never?"neg":"pos"}">${sim.never ? "Never" : monthLabel(addMonths(sim.months))}</span><span class="s">${sim.never ? "payments don't cover the interest" : sim.months + " months from now"}</span></div>
+    <div class="panel stat"><span class="eyebrow">Total interest</span><span class="v">${money(sim.totalInterest)}</span><span class="s">on this plan</span></div>
+    <div class="panel stat"><span class="eyebrow">Saved vs minimums</span><span class="v pos">${saved === null ? "—" : money(saved)}</span><span class="s">${base.never ? "minimums alone never clear it" : "and " + Math.max(0, base.months - sim.months) + " months sooner"}</span></div>
+    <div class="panel stat"><span class="eyebrow">${S.strategy === "avalanche" ? "Snowball" : "Avalanche"} instead</span><span class="v">${other.never ? "Never" : money(other.totalInterest)}</span><span class="s">${other.never ? "" : other.months + " months · " + (Math.abs(other.totalInterest - sim.totalInterest) < 1 ? "same order and cost for your debts" : other.totalInterest > sim.totalInterest ? "costs " + money(other.totalInterest - sim.totalInterest) + " more" : "saves " + money(sim.totalInterest - other.totalInterest))}</span></div>
+  </div>
+  <div class="grid g2">
+    <div class="panel"><h3>Balance over time</h3>${lineChart([{data:base.series, color:"var(--muted)", dash:true},{data:sim.series, color:"var(--accent)", fill:true}], {label:"Debt balance", fmt:v=>money(v), xl:i=>monthLabel(addMonths(i))})}
+      ${legend([["var(--accent)","Your plan"],["var(--muted)","Minimum payments only",1]])}</div>
+    <div class="panel"><h3>Payoff order</h3><div class="cal">${order}</div>
+      <p class="note">Avalanche costs the least interest. Snowball clears small debts first, which many people find easier to stick with. Both beat paying minimums.</p></div>
+  </div>` : ""}`;
+}
+
+function viewGoals(){
+  const cards = S.goals.map(g => { const s = goalStats(g);
+    const behind = s.perMonth !== null && s.avg > 0 && s.avg < s.perMonth && !s.done;
+    const status = s.done ? `<span class="chip good">Reached</span>` : s.monthsLeft === 0 && g.deadline ? `<span class="chip bad">Deadline passed</span>` : behind ? `<span class="chip warn">Behind pace</span>` : s.avg > 0 ? `<span class="chip good">On pace</span>` : `<span class="chip">Not started</span>`;
+    const cs = (g.contributions || []).slice().sort((a,b) => b.date.localeCompare(a.date));
+    return `<div class="goal">
+      <div class="goal-top"><div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1">
+        <input class="cell" style="font-family:var(--display);font-weight:700;font-size:1.15rem;padding-left:0" data-c="goals" data-id="${g.id}" data-f="name" value="${esc(g.name)}" aria-label="Goal name">
+        <div>${status}</div></div>
+        <div style="text-align:right"><div class="big">${money(s.remaining)}</div><div class="small muted">left to reach your goal</div></div></div>
+      <div class="bar"><i style="width:${s.p}%"></i></div>
+      <div class="kv">
+        <div>Saved<b>${money(s.saved)}</b></div>
+        <div>Progress<b>${pct(s.p)}</b></div>
+        <div>Needed per month<b>${s.perMonth === null ? "—" : money(s.perMonth)}</b></div>
+        <div>Your average / month<b>${money(s.avg)}</b></div>
+        <div>At this pace<b>${s.done ? "Done" : s.eta ? monthLabel(s.eta) : "—"}</b></div>
+      </div>
+      <div class="row">
+        <label class="field">Target<input type="number" step="any" class="num" data-c="goals" data-id="${g.id}" data-f="target" value="${num(g.target)}"></label>
+        <label class="field">Target date<input type="date" data-c="goals" data-id="${g.id}" data-f="deadline" value="${esc(g.deadline || "")}"></label>
+      </div>
+      <form class="row" data-act="contribute" data-id="${g.id}">
+        <label class="field">Contribution<input name="amount" type="number" step="any" required placeholder="0.00" id="amt-${g.id}"></label>
+        <label class="field">Date<input name="date" type="date" value="${todayISO()}" id="date-${g.id}"></label>
+        <label class="field">Note<input name="note" placeholder="optional" id="note-${g.id}"></label>
+        <button class="btn primary" type="submit">Add contribution</button>
+      </form>
+      <details><summary>${cs.length} contribution${cs.length===1?"":"s"}</summary>
+        <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Note</th><th class="n">Amount</th><th></th></tr></thead><tbody>
+        ${cs.map(c => `<tr><td>${fmtDate(c.date)}</td><td class="muted">${esc(c.note)}</td><td class="n num">${money(num(c.amount))}</td><td><button class="btn ghost" data-act="delContrib" data-g="${g.id}" data-id="${c.id}" aria-label="Remove">✕</button></td></tr>`).join("") || `<tr><td colspan="4" class="empty">No contributions yet.</td></tr>`}
+        </tbody></table></div></details>
+      <div><button class="btn ghost" data-act="del" data-c="goals" data-id="${g.id}">Delete goal</button></div>
+    </div>`; }).join("");
+  return `
+  <div class="page-head"><div><div class="eyebrow">Savings goals</div><h2>Set a target, log every deposit</h2>
+  <p>Each time you put money aside, add it here. You'll see what's left, what you need per month to make the date, and when you'll get there at your current pace.</p></div>
+  <button class="btn primary" data-act="addGoal">+ New goal</button></div>
+  ${sampleBanner()}
+  <div class="grid g2">${cards || `<div class="panel"><p class="empty">No goals yet. Start with an emergency fund of three to six months of expenses.</p></div>`}</div>`;
+}
+
+let busy = false, mktErr = "", lookup = { sym:"", err:"", loading:false };
+function calendarList(ev){
+  const fx = fxCached();
+  return `<div class="cal">${ev.map(e => { const d = new Date((e.pay || e.ex) + "T00:00:00"); const tot = e.amount * (e.shares || 0);
+    return `<div class="cal-item"><div class="date-badge"><b>${d.getDate()}</b><span>${d.toLocaleDateString(undefined,{month:"short"})}</span></div>
+      <div style="min-width:0"><b>${esc(e.sym)}</b> <span class="muted small">${money(e.amount,"USD",2)} per share</span>
+      <div class="small muted">Ex-dividend ${fmtDate(e.ex)} · Paid ${fmtDate(e.pay)}</div></div>
+      <div style="text-align:right">${e.shares ? `<div class="num goldc">${money(tot,"USD",2)}</div>${fx && S.settings.currency!=="USD" ? `<div class="small muted num">≈ ${money(tot*fx,undefined,2)}</div>` : ""}` : ""}
+      <span class="chip ${e.est ? "" : "gold"}">${e.est ? "Estimated" : "Announced"}</span></div></div>`; }).join("")}</div>`;
+}
+function viewInvest(){
+  const st = S.settings, fx = fxCached();
+  const hold = S.holdings.map(h => { const q = priceOf(h.symbol), p = divProfile(h.symbol); const sh = num(h.shares);
+    const val = q ? q.price * sh : null, y = q && p ? p.ttm / q.price * 100 : null;
+    return `<tr><td><input class="cell" style="text-transform:uppercase;font-weight:600" data-c="holdings" data-id="${h.id}" data-f="symbol" value="${esc(h.symbol)}" aria-label="Ticker"></td>
+      <td class="n"><input class="cell" type="number" step="any" data-c="holdings" data-id="${h.id}" data-f="shares" value="${sh}" aria-label="Shares"></td>
+      <td class="n num">${q && !q.manual ? money(q.price,"USD",2) : `<input class="cell" type="number" step="any" data-c="holdings" data-id="${h.id}" data-f="price" value="${num(h.price) || ""}" placeholder="price" aria-label="Price per share in USD">`}</td>
+      <td class="n num">${val !== null ? money(val,"USD") : "—"}</td>
+      <td class="n num">${y !== null ? pct(y) : "—"}</td>
+      <td>${p ? `<span class="chip">${p.freq}</span>` : `<span class="muted small">—</span>`}</td>
+      <td class="n num goldc">${p ? money(p.ttm * sh,"USD",2) : "—"}</td>
+      <td><button class="btn ghost" data-act="del" data-c="holdings" data-id="${h.id}" aria-label="Remove">✕</button></td></tr>`; }).join("");
+  const totVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares));
+  const totDiv = sum(S.holdings, h => (divProfile(h.symbol)?.ttm || 0) * num(h.shares));
+  const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares))).sort((a,b) => (a.pay||a.ex).localeCompare(b.pay||b.ex));
+
+  // growth projection
+  const yrs = Math.max(1, Math.min(50, Math.round(num(st.invYears)))), r = num(st.invReturn) / 1200;
+  const series = [num(st.invStart)], contrib = [num(st.invStart)];
+  let bal = num(st.invStart);
+  for (let m = 1; m <= yrs * 12; m++){ bal = bal * (1 + r) + num(st.invMonthly); if (m % 12 === 0){ series.push(bal); contrib.push(num(st.invStart) + num(st.invMonthly) * m); } }
+  const t = totals(), hiDebt = S.debts.filter(d => num(d.balance) > 0 && num(d.apr) > num(st.invReturn));
+
+  // lookup
+  let look = "";
+  if (lookup.sym){ const p = divProfile(lookup.sym), q = priceOf(lookup.sym);
+    look = lookup.loading ? `<p class="muted small">Looking up ${esc(lookup.sym)}…</p>` : lookup.err ? `<p class="err">${esc(lookup.err)}</p>` :
+      !p ? `<p class="muted small">${esc(lookup.sym)} has no dividend history on Alpha Vantage. It may not pay dividends.</p>` :
+      `<div class="kv"><div>Price<b>${q ? money(q.price,"USD",2) : "—"}</b></div><div>Paid last 12 months<b>${money(p.ttm,"USD",2)}</b></div><div>Yield<b>${q ? pct(p.ttm/q.price*100) : "—"}</b></div><div>Frequency<b>${p.freq}</b></div></div>
+       <div class="tbl-wrap"><table><thead><tr><th>Ex-dividend</th><th>Declared</th><th>Paid</th><th class="n">Per share</th></tr></thead><tbody>
+       ${upcomingEvents(lookup.sym, 0).filter(e=>e.est).slice(0,2).map(e => `<tr><td>${fmtDate(e.ex)} <span class="chip">Estimated</span></td><td class="muted">—</td><td>${fmtDate(e.pay)}</td><td class="n num">${money(e.amount,"USD",2)}</td></tr>`).join("")}
+       ${p.history.slice(0,8).map(x => `<tr><td>${fmtDate(x.ex)}</td><td class="muted">${fmtDate(x.decl)}</td><td>${fmtDate(x.pay)}</td><td class="n num">${money(x.amount,"USD",2)}</td></tr>`).join("")}</tbody></table></div>
+       <div><button class="btn" data-act="addLookup">+ Add ${esc(lookup.sym)} to my holdings</button></div>`; }
+
+  return `
+  <div class="page-head"><div><div class="eyebrow">Invest &amp; dividends</div><h2>Shares that pay you</h2>
+  <p>Track dividend-paying shares, see when the next payments land, and project how monthly investing grows. Prices are in US dollars from Alpha Vantage.</p></div>
+  ${MODE === "online" ? "" : `<button class="btn primary" data-act="refresh" ${busy?"disabled":""}>${busy ? "Refreshing…" : "Refresh market data"}</button>`}</div>
+  ${MODE === "online" ? `<div class="banner"><span><b>Online version.</b> Live prices and new dividend dates come from the PC version. To bring them here, press <b>Copy backup</b> on the PC version's Setup page, then paste it into <b>Restore</b> on this Setup page. You can also type prices and dividend dates in yourself.</span><a class="btn" href="#setup">Open setup</a></div>` : (st.avKey||"demo") === "demo" ?`<div class="banner"><span>You're using Alpha Vantage's demo key, which only returns data for <b>IBM</b>. Get a free key (25 lookups a day) at <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener">alphavantage.co</a>, then paste it in Settings.</span><a class="btn" href="#setup">Open settings</a></div>` : ""}
+  ${mktErr ? `<p class="err">${esc(mktErr)}</p>` : ""}
+  <div class="grid g4">
+    <div class="panel stat"><span class="eyebrow">Portfolio value</span><span class="v">${money(totVal,"USD")}</span><span class="s">${fx && st.currency!=="USD" ? "≈ " + money(totVal*fx) : "latest prices"}</span></div>
+    <div class="panel stat tap" ${tap("div")}><span class="eyebrow">Dividends / year</span><span class="v goldc">${money(totDiv,"USD")}</span><span class="s">${money(totDiv/12,"USD",2)} a month on average</span></div>
+    <div class="panel stat"><span class="eyebrow">Portfolio yield</span><span class="v">${totVal ? pct(totDiv/totVal*100) : "—"}</span><span class="s">trailing 12 months</span></div>
+    <div class="panel stat"><span class="eyebrow">Next payment</span><span class="v">${ev[0] ? fmtDate(ev[0].pay || ev[0].ex, {day:"numeric", month:"short"}) : "—"}</span><span class="s">${ev[0] ? esc(ev[0].sym) + " · " + money(ev[0].amount * ev[0].shares,"USD",2) : "refresh to load dates"}</span></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>My dividend shares</h3><button class="btn" data-act="addHolding">+ Add holding</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th class="n">Shares</th><th class="n">Price</th><th class="n">Value</th><th class="n">Yield</th><th>Pays</th><th class="n">Dividends / yr</th><th></th></tr></thead>
+    <tbody>${hold || `<tr><td colspan="8" class="empty">No holdings yet. Add a ticker such as KO, JNJ or O.</td></tr>`}</tbody></table></div>
+    <p class="small muted" style="margin:0">Use US tickers. Each refresh uses two lookups per share (price and dividends) and is saved for 12 hours.</p>
+  </div>
+  <div class="grid g2">
+    <div class="panel"><div class="panel-head"><h3>Dividend calendar · next 12 months</h3></div>
+      <p class="small muted" style="margin:0">Own the share before the <b>ex-dividend date</b> to receive the payment. “Announced” dates come from the company; “Estimated” dates follow its usual schedule.</p>
+      ${ev.length ? calendarList(ev) : `<p class="empty">No dates yet. Add holdings and press Refresh market data.</p>`}</div>
+    <div class="panel"><h3>Look up any share's dividends</h3>
+      <form class="row" data-act="lookup"><label class="field">Ticker<input name="sym" id="lookup-sym" placeholder="e.g. KO" value="${esc(lookup.sym)}" style="text-transform:uppercase" required></label><button class="btn primary" type="submit">Look up</button></form>
+      ${look}</div>
+  </div>
+  <div class="panel"><h3>Dividend dates you've added</h3>
+    <p class="small muted" style="margin:0">Seen a dividend announced in your broker's app or on the company's site? Add it here and it shows in your calendar and income totals.</p>
+    <form class="row" data-act="addDiv">
+      <label class="field">Ticker<input name="sym" id="md-sym" required placeholder="e.g. KO" style="text-transform:uppercase"></label>
+      <label class="field">Ex-dividend date<input name="ex" id="md-ex" type="date" required></label>
+      <label class="field">Pay date<input name="pay" id="md-pay" type="date"></label>
+      <label class="field">Per share (USD)<input name="amount" id="md-amt" type="number" step="any" min="0" required placeholder="0.00"></label>
+      <button class="btn primary" type="submit">Add date</button>
+    </form>
+    ${(S.manualDivs || []).length ? `<div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th>Ex-dividend</th><th>Paid</th><th class="n">Per share</th><th></th></tr></thead><tbody>
+      ${S.manualDivs.slice().sort((a,b) => b.ex.localeCompare(a.ex)).map(m => `<tr><td><b>${esc(m.sym)}</b></td><td>${fmtDate(m.ex)}</td><td>${fmtDate(m.pay)}</td><td class="n num">${money(num(m.amount),"USD",2)}</td><td><button class="btn ghost" data-act="del" data-c="manualDivs" data-id="${m.id}" aria-label="Remove">✕</button></td></tr>`).join("")}
+      </tbody></table></div>` : ""}
+  </div>
+  <div class="grid g2">
+    <div class="panel"><h3>Growth if you invest every month</h3>
+      <div class="row">
+        <label class="field">Starting amount<input type="number" step="any" data-set="invStart" id="invStart" value="${num(st.invStart)}"></label>
+        <label class="field">Per month<input type="number" step="any" data-set="invMonthly" id="invMonthly" value="${num(st.invMonthly)}"></label>
+        <label class="field">Return % / yr<input type="number" step="any" data-set="invReturn" id="invReturn" value="${num(st.invReturn)}"></label>
+        <label class="field">Years<input type="number" step="1" data-set="invYears" id="invYears" value="${yrs}"></label>
+      </div>
+      <div class="kv"><div>After ${yrs} years<b class="pos">${money(bal)}</b></div><div>You put in<b>${money(contrib[contrib.length-1])}</b></div><div>Growth<b class="goldc">${money(bal - contrib[contrib.length-1])}</b></div></div>
+      ${lineChart([{data:contrib, color:"var(--muted)", dash:true},{data:series, color:"var(--gold)", fill:true}], {label:"Investment growth", fmt:v=>money(v), xl:i=>"Yr " + i})}
+      ${legend([["var(--gold)","Value with returns reinvested"],["var(--muted)","Money you put in",1]])}
+      ${t.left > 0 ? `<p class="small muted" style="margin:0">Your budget has ${money(t.left)} unassigned each month. <button class="btn" data-act="useLeft">Use it here</button></p>` : ""}
+    </div>
+    <div class="panel"><h3>Before you buy</h3>
+      ${hiDebt.length ? `<p class="note">You have debt charging more than the ${pct(num(st.invReturn))} return assumed here (${hiDebt.map(d => esc(d.name) + " at " + pct(num(d.apr))).join(", ")}). Paying it off is a guaranteed return at that rate, which is why many people clear it before investing.</p>` : ""}
+      <ol class="small" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+        <li>Build a small emergency fund so a surprise bill doesn't go back on a card.</li>
+        <li>Clear high-interest debt using the payoff plan.</li>
+        <li>Open an account with a regulated broker in your country. Compare fees, and look at tax-free accounts where you live.</li>
+        <li>A low-cost dividend ETF spreads your money across many companies instead of one.</li>
+        <li>Check the payout history above: steady or rising payments over many years are a better sign than a high yield alone.</li>
+      </ol>
+      <p class="small muted" style="margin:0">This app tracks and projects. It doesn't buy or sell shares, and it isn't financial advice. Returns are not guaranteed and share prices can fall.</p>
+    </div>
+  </div>`;
+}
+
+function viewSettings(){
+  const st = S.settings, curs = ["USD","ZAR","EUR","GBP","AUD","CAD","NZD","INR","JPY","CHF","SEK","NOK","DKK","PLN","BRL","MXN","SGD","HKD","CNY","KRW","TRY","ILS","PHP","THB","IDR","MYR","CZK","HUF","RON","ISK"];
+  return `
+  <div class="page-head"><div><div class="eyebrow">Settings</div><h2>Make it yours</h2></div></div>
+  <div class="grid g2">
+    <div class="panel"><h3>Currency</h3><p class="small muted" style="margin:0">Your budget, debts and goals show in this currency. Share prices stay in US dollars, with a conversion from Frankfurter beside them.</p>
+      <label class="field">Your currency<select id="currency" data-set="currency">${curs.map(c => `<option ${c===st.currency?"selected":""}>${c}</option>`).join("")}</select></label>
+      ${st.currency !== "USD" ? `<p class="small muted" style="margin:0">Rate in use: 1 USD = ${fxCached() ? fxCached().toFixed(4) + " " + st.currency : (MODE === "online" ? "not set yet" : "loading…")}</p>
+      <label class="field">Your own rate (optional): 1 USD = ? ${esc(st.currency)}<input type="number" step="any" min="0" id="manualFx" data-set="manualFx" value="${num(st.manualFx) || ""}" placeholder="${MODE === "online" ? "e.g. 17.25" : "used only if the live rate can't load"}"></label>` : ""}</div>
+    ${MODE === "online" ? "" : `<div class="panel"><h3>Market data key</h3><p class="small muted" style="margin:0">Dividend dates and prices come from Alpha Vantage. A free key gives 25 lookups a day. Get one at <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener">alphavantage.co</a>. It's stored only in this browser.</p>
+      <label class="field">Alpha Vantage key<input id="avKey" data-set="avKey" value="${esc(st.avKey)}" autocomplete="off" spellcheck="false"></label></div>`}
+    ${MODE === "online" ? `<div class="panel"><h3>Use on your iPhone</h3><p class="small muted" style="margin:0">Open this page's link on your iPhone while signed in to Claude, then tap Share, then <b>Add to Home Screen</b>. Your numbers are saved to your Claude account, so they're the same on every device you sign in on. Nobody else can see them, even if you share the link.</p></div>` : MODE === "pwa" ? `<div class="panel"><h3>Phone app</h3><p class="small muted" style="margin:0">Once added to your Home Screen, this app opens with no internet at all. Live prices and dividend dates refresh whenever you're online. Your numbers are saved on this phone only. To move them to or from your PC, use <b>Copy backup</b> on one and <b>Restore</b> on the other.</p></div>` : `<div class="panel"><h3>Use on your iPhone</h3>
+      <div id="phoneBox" class="small muted">${SERVER ? "Loading phone link…" : "Close this window and open the app with <b>Start Freedom Ledger.bat</b> in the FreedomLedger folder. Then come back here for the iPhone link."}</div></div>`}
+    <div class="panel"><h3>Your data</h3><p class="small muted" style="margin:0">${MODE === "online" ? "Saved to your Claude account and on this device." : SERVER ? "Saved on your PC and shared with your phone." : "Saved in this browser on this device."} <b>Copy backup</b> copies everything, including your latest share prices and dividend dates, so you can paste it into another version with <b>Restore</b>.</p>
+      <div class="row"><button class="btn" data-act="export">Copy backup</button><button class="btn" data-act="loadSample">Load example numbers</button><button class="btn" data-act="askReset">Erase everything</button></div>
+      <div id="confirmReset" hidden class="banner"><span>Erase all budgets, debts, goals and holdings? This can't be undone.</span><button class="btn" data-act="reset" style="color:var(--bad)">Erase</button></div>
+      <label class="field">Restore from backup<textarea id="importBox" rows="3" style="border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px;color:var(--ink);font:12px var(--mono)" placeholder="Paste a backup here"></textarea></label>
+      <div><button class="btn" data-act="import">Restore</button> <span id="ioMsg" class="small muted"></span></div></div>
+  </div>`;
+}
+
+/* ---------- drill-down sheets: a chart for each tile, plus ways to improve worked out from your numbers ---------- */
+const tap = k => `data-detail="${k}" role="button" tabindex="0" aria-haspopup="dialog"`;
+const ymKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+function hbars(rows, max){
+  max = max || Math.max(1, ...rows.map(r => Math.max(r.value, r.mark || 0)));
+  return `<div class="hbars">${rows.map(r => `<div class="hb"><div class="hb-l"><span>${esc(r.label)}${r.chip ? ` <span class="chip ${r.chipCls || ""}">${esc(r.chip)}</span>` : ""}</span><b class="num">${r.text}</b></div>
+    <div class="bar ${r.cls || ""}"><i style="width:${Math.max(0, Math.min(100, r.value / max * 100))}%"></i>${r.mark != null ? `<em style="left:${Math.min(100, r.mark / max * 100)}%" title="Budget"></em>` : ""}</div></div>`).join("")}</div>`;
+}
+function colChart(vals, labels, color, fmtv){
+  const W = 640, H = 210, pl = 54, pr = 10, pt = 14, pb = 26, max = Math.max(1, ...vals), bw = (W - pl - pr) / vals.length;
+  let g = "";
+  for (let t = 0; t <= 3; t++){ const y = pt + (H - pt - pb) * (1 - t / 3); g += `<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-6}" y="${y+4}" text-anchor="end">${esc(fmtv(max * t / 3))}</text>`; }
+  vals.forEach((v, i) => { const h = (H - pt - pb) * v / max;
+    g += `<rect x="${pl + i*bw + bw*.18}" y="${H - pb - h}" width="${bw*.64}" height="${Math.max(0, h)}" rx="2" fill="${color}"/><text x="${pl + i*bw + bw/2}" y="${H-8}" text-anchor="middle">${esc(labels[i])}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly amounts">${g}</svg>`;
+}
+const tips = list => `<ol class="tips">${list.filter(Boolean).map(t => `<li><b>${t.t}</b><span>${t.b}</span>${t.a ? `<button class="btn" data-apply="${t.a.k}">${esc(t.a.label)}</button>` : ""}</li>`).join("")}</ol>`;
+const sec = (title, body) => `<section class="sheet-sec"><div class="eyebrow">${title}</div>${body}</section>`;
+
+function detailLeft(){
+  const t = totals(), inc = t.income || 1;
+  const saveCats = sum(S.expenses.filter(e => e.kind === "save"), e => e.budget);
+  const parts = [["Needs", t.needs, "var(--accent)"], ["Wants", t.wants, "var(--warn)"], ["Savings", saveCats, "var(--good)"], ["Debt payments", t.debtPay, "var(--bad)"], ["Left over", Math.max(0, t.left), "var(--ink)"]];
+  const stack = `<div class="stack">${parts.map(([n, v, c]) => v > 0 ? `<i style="flex:${v};background:${c}" title="${n}"></i>` : "").join("")}</div>
+    <div class="row small">${parts.map(([n, v, c]) => `<span class="lg"><i style="background:${c}"></i>${n} <b class="num">${money(v)}</b> <span class="muted">${pct(v / inc * 100)}</span></span>`).join("")}</div>`;
+  const cats = S.expenses.slice().sort((a, b) => num(b.spent) - num(a.spent)).map(e => ({ label:e.name, value:num(e.spent), mark:num(e.budget), text: money(num(e.spent)) + " / " + money(num(e.budget)), cls: num(e.spent) > num(e.budget) ? "over" : "" }));
+  const over = S.expenses.filter(e => num(e.spent) > num(e.budget)).sort((a, b) => (num(b.spent) - num(b.budget)) - (num(a.spent) - num(a.budget)));
+  const wants = S.expenses.filter(e => e.kind === "want").sort((a, b) => num(b.budget) - num(a.budget));
+  const wp = t.wants / inc * 100;
+  const base = simulate(S.debts, S.extraPayment, S.strategy);
+  const boosted = t.left > 0 && S.debts.length ? simulate(S.debts, num(S.extraPayment) + t.left, S.strategy) : null;
+  const L = [];
+  if (t.left < 0) L.push({ t:`You're ${money(-t.left)} short each month.`, b:"Your budget and debt payments add up to more than your income. Trim wants first, then look at the biggest needs." });
+  over.slice(0, 2).forEach(e => L.push({ t:`${esc(e.name)} is ${money(num(e.spent) - num(e.budget))} over budget.`, b:`You've spent ${money(num(e.spent))} of ${money(num(e.budget))}. Hold back for the rest of the month, or set a budget that matches real life.` }));
+  if (wp > 30) L.push({ t:`Wants take ${pct(wp)} of your income.`, b:`Bringing them down to 30% frees ${money(t.wants - inc * 0.3)} a month.` });
+  if (wants[0] && num(wants[0].budget) > 0) L.push({ t:`Trim ${esc(wants[0].name)} by a quarter.`, b:`That frees ${money(num(wants[0].budget) * 0.25)} a month, or ${money(num(wants[0].budget) * 3)} a year.` });
+  if (boosted && !boosted.never && !base.never && base.months > boosted.months) L.push({ t:`Send the ${money(t.left)} left over to your debt.`, b:`You'd be debt-free ${base.months - boosted.months} months sooner (${monthLabel(addMonths(boosted.months))}) and pay ${money(base.totalInterest - boosted.totalInterest)} less interest.`, a:{ k:"extra:" + Math.round(t.left), label:"Add it to my debt payment" } });
+  L.push({ t:"Pay yourself first.", b:"Set an automatic transfer to savings on payday, so the money moves before it gets spent." });
+  return { title:"Left over this month · " + money(t.left), link:["#budget", "Open budget"],
+    body: sec("Where your income goes", stack) + (cats.length ? sec("Spent vs budget · line marks the budget", hbars(cats)) : "") + sec("Ways to improve", tips(L)) };
+}
+
+function detailDebt(){
+  if (!S.debts.length) return { title:"Total debt", body:`<p class="empty">No debts recorded.</p>`, link:["#debt", "Open payoff plan"] };
+  const sim = simulate(S.debts, S.extraPayment, S.strategy), base = simulate(S.debts, 0, S.strategy);
+  const bars = S.debts.slice().sort((a, b) => num(b.balance) - num(a.balance)).map(d => { const r = num(d.apr);
+    return { label:d.name, value:num(d.balance), text:money(num(d.balance)), chip:pct(r) + " interest", chipCls: r >= 15 ? "bad" : r >= 8 ? "warn" : "good", cls: r >= 15 ? "over" : "" }; });
+  const scen = [0, 50, 100, 250, 500].map(x => { const s = simulate(S.debts, num(S.extraPayment) + x, S.strategy);
+    return `<tr><td>${x ? "+" + money(x) + " / month" : "Your plan now"}</td><td>${s.never ? "Never" : monthLabel(addMonths(s.months))}</td><td class="n num">${money(s.totalInterest)}</td><td class="n num pos">${x && !s.never && !sim.never ? money(sim.totalInterest - s.totalInterest) : "—"}</td></tr>`; }).join("");
+  const monthlyInt = sum(S.debts, d => num(d.balance) * num(d.apr) / 1200);
+  const top = S.debts.filter(d => num(d.balance) > 0).sort((a, b) => num(b.apr) - num(a.apr))[0];
+  const L = [{ t:`Your debts cost ${money(monthlyInt)} in interest this month.`, b:`That's about ${money(monthlyInt * 12)} a year that buys you nothing. Every extra payment cuts it.` }];
+  if (top && num(top.apr) > 5){ const cut = S.debts.map(d => d.id === top.id ? Object.assign({}, d, { apr: num(d.apr) - 5 }) : d); const s2 = simulate(cut, S.extraPayment, S.strategy);
+    L.push({ t:`Ask for a lower rate on ${esc(top.name)}.`, b:`It charges ${pct(num(top.apr))}. Getting it 5 points lower would save about ${money(Math.max(0, sim.totalInterest - s2.totalInterest))}. Lenders often agree for customers who pay on time.` }); }
+  if (S.strategy === "snowball"){ const av = simulate(S.debts, S.extraPayment, "avalanche"); if (av.totalInterest < sim.totalInterest - 1) L.push({ t:"Switch to avalanche.", b:`Paying the highest rate first saves ${money(sim.totalInterest - av.totalInterest)}.`, a:{ k:"strategy:avalanche", label:"Switch to avalanche" } }); }
+  L.push({ t:`Pay ${money(100)} more a month.`, b:"The table above shows how much sooner you'd be free and how much interest you'd keep.", a:{ k:"extra:100", label:`Add ${money(100)} to my extra payment` } });
+  L.push({ t:"Stop new debt while you clear the old.", b:"Remove saved cards from shopping sites, and keep a small emergency fund so surprises don't go on credit." });
+  L.push({ t:"Consolidate only if it's cheaper.", b:"A consolidation loan or balance transfer helps only when the rate and fees are lower than what you pay now and the cards stay paid off." });
+  return { title:"Total debt · " + money(sum(S.debts, d => d.balance)), link:["#debt", "Open payoff plan"],
+    body: sec("Balance by debt", hbars(bars))
+      + sec("Balance over time", lineChart([{ data:base.series, color:"var(--muted)", dash:true }, { data:sim.series, color:"var(--accent)", fill:true }], { label:"Debt balance", xl:i => monthLabel(addMonths(i)) }) + legend([["var(--accent)", "Your plan"], ["var(--muted)", "Minimum payments only", 1]]))
+      + sec("What paying a bit more does", `<div class="tbl-wrap"><table><thead><tr><th>Extra</th><th>Debt-free</th><th class="n">Interest</th><th class="n">You save</th></tr></thead><tbody>${scen}</tbody></table></div>`)
+      + sec("Ways to improve", tips(L)) };
+}
+
+function detailGoals(){
+  if (!S.goals.length) return { title:"Saved toward goals", body:`<p class="empty">No goals yet.</p>`, link:["#goals", "Open goals"] };
+  const all = S.goals.flatMap(g => g.contributions || []).filter(c => c.date).sort((a, b) => a.date.localeCompare(b.date));
+  const target = sum(S.goals, g => g.target);
+  let chart = `<p class="empty">Log a contribution to see your savings over time.</p>`;
+  if (all.length){
+    const start = new Date(all[0].date.slice(0, 7) + "-01T00:00:00"), n = Math.max(2, monthsBetween(ymd(start), todayISO()) + 1);
+    const cum = [], labels = []; let run = 0;
+    for (let i = 0; i < n; i++){ const d = new Date(start); d.setMonth(d.getMonth() + i); const k = ymKey(d);
+      run += sum(all.filter(c => c.date.slice(0, 7) === k), c => c.amount); cum.push(run); labels.push(d.toLocaleDateString(undefined, { month:"short" })); }
+    chart = lineChart([{ data:cum.map(() => target), color:"var(--muted)", dash:true }, { data:cum, color:"var(--good)", fill:true }], { label:"Saved over time", xl:i => labels[i] })
+      + legend([["var(--good)", "Total saved"], ["var(--muted)", "All targets combined", 1]]);
+  }
+  const rows = S.goals.map(g => { const s = goalStats(g); return { label:g.name, value:s.p, text:money(s.saved) + " / " + money(s.target) + " · " + pct(s.p), chip: s.done ? "Reached" : null, chipCls:"good" }; });
+  const t = totals(), L = [];
+  S.goals.forEach(g => { const s = goalStats(g);
+    if (s.done) L.push({ t:`${esc(g.name)} is reached.`, b:"Raise the target, or move its monthly amount to your next goal." });
+    else if (s.perMonth !== null && s.avg < s.perMonth) L.push({ t:`${esc(g.name)}: add ${money(s.perMonth - s.avg)} more a month.`, b:`You need ${money(s.perMonth)} a month to reach ${money(s.target)} by ${fmtDate(g.deadline)}. You average ${money(s.avg)}${s.eta ? `, which gets you there around ${monthLabel(s.eta)}` : ""}. Add more, or move the date.` });
+    else if (s.perMonth !== null) L.push({ t:`${esc(g.name)} is on pace.`, b:`At ${money(s.avg)} a month you'd finish around ${s.eta ? monthLabel(s.eta) : "soon"}, before your date of ${fmtDate(g.deadline)}.` }); });
+  if (t.left > 0) L.push({ t:`Your budget has ${money(t.left)} unassigned.`, b:"Sending even half of it to your goals each month speeds them up a lot." });
+  L.push({ t:"Automate it.", b:"A standing transfer on payday, set to the “needed per month” amount, keeps every goal on track without willpower." });
+  L.push({ t:"Keep goal money separate.", b:"Hold your emergency fund in its own savings account that pays interest, so it doesn't get spent by accident." });
+  return { title:"Saved toward goals · " + money(sum(S.goals, g => goalStats(g).saved)), link:["#goals", "Open goals"],
+    body: sec("Savings over time", chart) + sec("Each goal", hbars(rows, 100)) + sec("Ways to improve", tips(L)) };
+}
+
+function detailDiv(){
+  const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares)));
+  const months = []; for (let i = 0; i < 12; i++){ const d = addMonths(i); months.push({ key:ymKey(d), label:d.toLocaleDateString(undefined, { month:"short" }), v:0 }); }
+  ev.forEach(e => { const m = months.find(x => x.key === (e.pay || e.ex).slice(0, 7)); if (m) m.v += e.amount * e.shares; });
+  const per = S.holdings.map(h => ({ label:h.symbol || "—", value:(divProfile(h.symbol)?.ttm || 0) * num(h.shares) })).filter(r => r.value > 0).map(r => Object.assign(r, { text:money(r.value, "USD", 2), cls:"gold" }));
+  const totVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)), totDiv = sum(per, r => r.value), y = totVal ? totDiv / totVal : 0, fx = fxCached();
+  const next = ev.filter(e => e.ex >= todayISO()).sort((a, b) => a.ex.localeCompare(b.ex))[0];
+  const L = [];
+  if (!totDiv) L.push({ t:"No dividend data yet.", b:"Add holdings on the Invest page, then press Refresh market data." });
+  if (y > 0) L.push({ t:`To earn ${money(100, "USD")} a month at your ${pct(y * 100)} yield`, b:`you'd need about ${money(1200 / y, "USD")} invested. Each ${money(1000, "USD")} you add pays roughly ${money(1000 * y / 12, "USD", 2)} a month.` });
+  if (next) L.push({ t:`Next ex-dividend date: ${esc(next.sym)} on ${fmtDate(next.ex)}.`, b:`Own the shares before that date to get the ${money(next.amount, "USD", 2)} per share payment${next.est ? " (date estimated)" : ""}.` });
+  if (per.length && totDiv && Math.max(...per.map(r => r.value)) / totDiv > 0.5) L.push({ t:"Spread your income out.", b:"More than half your dividends come from one company. A dividend ETF, or a few more holdings in different sectors, means one cut can't hurt you as much." });
+  L.push({ t:"Reinvest while you're building.", b:"Turning on dividend reinvestment (DRIP) at your broker buys more shares automatically, so payments compound." });
+  L.push({ t:"Look for steady growers, not just high yields.", b:"A very high yield can mean the share price fell for a reason. Years of steady or rising payments are a better sign." });
+  return { title:"Dividend income · " + money(totDiv, "USD") + " / yr", link:["#invest", "Open invest"],
+    body: sec("Expected payments · next 12 months (USD)", colChart(months.map(m => m.v), months.map(m => m.label), "var(--gold)", v => money(v, "USD", 0))
+        + `<p class="small muted" style="margin:0">Includes estimated dates.${fx && S.settings.currency !== "USD" ? " Total ≈ " + money(sum(months, m => m.v) * fx) + "." : ""}</p>`)
+      + (per.length ? sec("By holding · per year", hbars(per)) : "") + sec("Ways to improve", tips(L)) };
+}
+
+function detailNet(){
+  const t = totals(), fx = fxCached(), sim = simulate(S.debts, S.extraPayment, S.strategy);
+  const gSaved = sum(S.goals, g => goalStats(g).saved), gAvg = sum(S.goals, g => goalStats(g).avg);
+  const port = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0);
+  const N = 36, debtS = [], assetS = [];
+  for (let i = 0; i <= N; i++){ debtS.push(i < sim.series.length ? sim.series[i] : (sim.never ? sim.series[sim.series.length - 1] : 0)); assetS.push(gSaved + gAvg * i + port); }
+  const cross = assetS.findIndex((a, i) => a >= debtS[i]);
+  const L = [];
+  if (assetS[0] < debtS[0]) L.push({ t: cross > 0 ? `You'll own more than you owe around ${monthLabel(addMonths(cross))}.` : "At this pace you'll still owe more than you own in 3 years.", b:`That assumes you keep paying debt as planned and saving ${money(gAvg)} a month toward goals.` });
+  else L.push({ t:"You own more than you owe.", b:"Keep the gap growing: invest what used to go to debt." });
+  if (S.debts.length) L.push({ t:"Debt is your biggest lever.", b:`Every amount you repay raises your net position by the same amount and stops its interest. Your debts cost about ${money(sum(S.debts, d => num(d.balance) * num(d.apr) / 1200))} a month in interest.` });
+  if (S.debts.length && !sim.never) L.push({ t:"Keep the payment going after your last debt.", b:`From ${monthLabel(addMonths(sim.months))}, sending the ${money(t.debtPay)} you pay now into savings or investing adds about ${money(t.debtPay * 12)} a year, before any returns.` });
+  L.push({ t:"Check in once a month.", b:"Update your balances on the same day each month. Watching the gap close keeps you going." });
+  return { title:"Net position", link:null,
+    body: sec("What you own vs what you owe · next 3 years", lineChart([{ data:debtS, color:"var(--bad)" }, { data:assetS, color:"var(--good)", fill:true }], { label:"Assets vs debt", xl:i => monthLabel(addMonths(i)) })
+        + legend([["var(--good)", "Savings + shares"], ["var(--bad)", "Debt"]]) + `<p class="small muted" style="margin:0">Where green rises above red, you own more than you owe.</p>`)
+      + sec("Ways to improve", tips(L)) };
+}
+
+const details = { left:detailLeft, debt:detailDebt, goals:detailGoals, div:detailDiv, net:detailNet };
+let openKey = null, lastFocus = null;
+function openDetail(k){
+  const d = details[k]?.(); if (!d) return;
+  if (!openKey) lastFocus = document.activeElement;
+  openKey = k;
+  document.getElementById("sheet-title").textContent = d.title;
+  document.getElementById("sheet-body").innerHTML = d.body + (d.link ? `<div><a class="btn primary" href="${d.link[0]}" data-close>${esc(d.link[1])}</a></div>` : "");
+  const sh = document.getElementById("sheet"), card = sh.querySelector(".sheet-card");
+  if (sh.hidden){ sh.hidden = false; document.body.style.overflow = "hidden"; card.scrollTop = 0; card.focus(); }
+}
+function closeDetail(){
+  const sh = document.getElementById("sheet"); if (sh.hidden) return;
+  sh.hidden = true; openKey = null; document.body.style.overflow = "";
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+}
+document.addEventListener("click", e => {
+  const ap = e.target.closest("[data-apply]");
+  if (ap){ const [k, v] = ap.dataset.apply.split(":");
+    if (k === "extra") S.extraPayment = Math.round(num(S.extraPayment) + num(v));
+    if (k === "strategy") S.strategy = v;
+    save(); render(); openDetail(openKey); return; }
+  if (e.target.closest("[data-close]")){ closeDetail(); return; }
+  const d = e.target.closest("[data-detail]");
+  if (d && !e.target.closest("input,select,textarea,a,button")) openDetail(d.dataset.detail);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") return closeDetail();
+  const d = e.target.closest && e.target.closest("[data-detail]");
+  if (d && e.target === d && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openDetail(d.dataset.detail); }
+});
+
+/* phone setup panel (Settings) */
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+async function loadPhone(){
+  const box = document.getElementById("phoneBox"); if (!box || !SERVER) return;
+  try {
+    const r = await fetch("api/info", { cache:"no-store" });
+    if (!r.ok){ box.innerHTML = "Open the app on the PC itself, at <code>http://localhost:8765</code>, to see the phone link."; return; }
+    const j = await r.json();
+    if (!j.urls.length){ box.textContent = "This PC isn't on a network right now. Connect it to your Wi-Fi and reopen Settings."; return; }
+    box.innerHTML = `<ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:var(--ink)">
+      <li>Connect your iPhone to the same Wi-Fi as this PC.</li><li>Point the iPhone camera at this code and tap the link (or type the link into Safari).</li><li>In Safari, tap Share, then <b>Add to Home Screen</b>.</li></ol>
+      <div id="qr" style="background:#fff;padding:10px;border-radius:4px;width:max-content;margin-top:12px"></div>
+      ${j.urls.map(u => `<code style="display:block;margin-top:8px;color:var(--accent);word-break:break-all">${esc(u)}</code>`).join("")}
+      <p style="margin:8px 0 0">The link holds your private access key. Only open it on devices you own. The PC must be on, with the Freedom Ledger window open.</p>`;
+    try { if (!window.QRCode) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js");
+      new QRCode(document.getElementById("qr"), { text:j.urls[0], width:180, height:180, colorDark:"#050605", colorLight:"#ffffff" }); }
+    catch(e){ document.getElementById("qr").hidden = true; }
+  } catch(e){ box.textContent = "Couldn't reach the Freedom Ledger server on this PC."; }
+}
+
+/* ---------- render & events ---------- */
+const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, invest:viewInvest, setup:viewSettings };
+function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
+function render(){
+  const r = route();
+  document.querySelectorAll("#nav a").forEach(a => a.getAttribute("href") === "#" + r ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+  document.getElementById("view").innerHTML = views[r]();
+  hud();
+  if (r === "setup") loadPhone();
+}
+function hud(){
+  const live = S.holdings.some(h => cached("GLOBAL_QUOTE", h.symbol));
+  const fx = fxCached();
+  const syncTxt = MODE === "online"
+    ? { connecting:"Connecting…", linked:"Saved to your account", offline:"Offline · saved here", device:"This device only", full:"Account storage full" }[sync]
+    : { local:"This device only", connecting:"Linking…", linked:"Synced with PC", offline:"PC offline · saved here", denied:"Access key needed" }[sync];
+  let mkt = navigator.onLine === false ? "Offline" : live ? "Online" : "Standby";
+  if (MODE === "online"){
+    const ts = Object.entries(C).filter(([k]) => k.startsWith("GLOBAL_QUOTE:")).map(([, v]) => v.t || 0);
+    mkt = ts.length ? "Snapshot " + new Date(Math.max(...ts)).toLocaleDateString(undefined, { day:"numeric", month:"short" }) : "Manual";
+  }
+  document.getElementById("hud").innerHTML =
+    `<span><i class="dot ${live && MODE !== "online" ? "" : "off"}"></i>Market data <b>${mkt}</b></span>` +
+    `<span><i class="dot ${sync === "linked" ? "" : "off"}"></i>Sync <b>${syncTxt}</b></span>` +
+    `<span>Currency <b>${esc(S.settings.currency)}</b>${fx && S.settings.currency !== "USD" ? ` · 1 USD = <b>${fx.toFixed(2)}</b>` : ""}</span>` +
+    `<span class="clock" id="clock"></span>`;
+  tick();
+}
+function tick(){ const c = document.getElementById("clock"); if (c) c.textContent = new Date().toLocaleString(undefined, {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
+setInterval(tick, 1000);
+window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
+
+const view = document.getElementById("view");
+view.addEventListener("change", e => {
+  const el = e.target;
+  if (el.dataset.c){ const item = S[el.dataset.c].find(x => x.id === el.dataset.id); if (!item) return;
+    item[el.dataset.f] = el.type === "number" ? num(el.value) : (el.dataset.f === "symbol" ? el.value.trim().toUpperCase() : el.value); }
+  else if (el.dataset.root){ S[el.dataset.root] = num(el.value); }
+  else if (el.dataset.set){ S.settings[el.dataset.set] = el.type === "number" ? num(el.value) : el.value.trim();
+    if (el.dataset.set === "currency") fxRate().then(render); }
+  else return;
+  save(); render();
+});
+view.addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, fd = new FormData(f);
+  if (f.dataset.act === "contribute"){
+    const g = S.goals.find(x => x.id === f.dataset.id); const amt = num(fd.get("amount")); if (!g || !amt) return;
+    g.contributions.push({ id:uid(), date: fd.get("date") || todayISO(), amount:amt, note: String(fd.get("note") || "") }); save(); render();
+  }
+  if (f.dataset.act === "addDiv"){
+    const sym = String(fd.get("sym") || "").trim().toUpperCase(), ex = String(fd.get("ex") || "");
+    if (!sym || !ex) return;
+    S.manualDivs = S.manualDivs || [];
+    S.manualDivs.push({ id:uid(), sym, ex, pay:String(fd.get("pay") || ""), amount:num(fd.get("amount")) });
+    save(); render();
+  }
+  if (f.dataset.act === "lookup"){
+    const sym = String(fd.get("sym")).trim().toUpperCase(); if (!sym) return;
+    lookup = { sym, err:"", loading:true }; render();
+    try { await av("DIVIDENDS", sym); try { await av("GLOBAL_QUOTE", sym); } catch(_){} } catch(err){ lookup.err = err.message; }
+    lookup.loading = false; render();
+  }
+});
+view.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.tagName === "FORM") return;
+  const a = b.dataset.act;
+  const add = (c, o) => { S[c].push(Object.assign({id:uid()}, o)); save(); render(); };
+  if (a === "del"){ S[b.dataset.c] = (S[b.dataset.c] || []).filter(x => x.id !== b.dataset.id); save(); render(); }
+  if (a === "delContrib"){ const g = S.goals.find(x => x.id === b.dataset.g); g.contributions = g.contributions.filter(c => c.id !== b.dataset.id); save(); render(); }
+  if (a === "addIncome") add("income", {name:"New income", amount:0});
+  if (a === "addExpense") add("expenses", {name:"New category", kind:"need", budget:0, spent:0});
+  if (a === "addDebt") add("debts", {name:"New debt", balance:0, apr:0, minPay:0});
+  if (a === "addGoal") add("goals", {name:"New goal", target:1000, deadline:new Date(Date.now()+365*86400000).toISOString().slice(0,10), contributions:[]});
+  if (a === "addHolding") add("holdings", {symbol:"", shares:0});
+  if (a === "addLookup"){ add("holdings", {symbol:lookup.sym, shares:1}); }
+  if (a === "strategy"){ S.strategy = b.dataset.v; save(); render(); }
+  if (a === "useLeft"){ S.settings.invMonthly = Math.round(totals().left); save(); render(); }
+  if (a === "startFresh" || a === "reset"){ const keep = S.settings; S = blankState(); S.settings = keep; save(); render(); }
+  if (a === "askReset"){ document.getElementById("confirmReset").hidden = false; }
+  if (a === "loadSample"){ const keep = S.settings; S = sampleState(); S.settings = keep; save(); render(); }
+  if (a === "export"){ const txt = JSON.stringify(Object.assign({}, S, { market: trimMarket() })); const box = document.getElementById("importBox"); const msg = document.getElementById("ioMsg");
+    try { await navigator.clipboard.writeText(txt); msg.textContent = "Backup copied. Paste it somewhere safe."; }
+    catch(_){ box.value = txt; box.select(); msg.textContent = "Copy the selected text above."; } }
+  if (a === "import"){ const msg = document.getElementById("ioMsg");
+    try { const d = JSON.parse(document.getElementById("importBox").value); if (!d.settings || !Array.isArray(d.debts)) throw 0;
+      if (d.market && typeof d.market === "object"){ C = Object.assign({}, C, d.market); saveCache(); }
+      delete d.market; S = d; save(); render(); }
+    catch(_){ msg.textContent = "That doesn't look like a Freedom Ledger backup."; } }
+  if (a === "refresh"){
+    busy = true; mktErr = ""; render();
+    const errs = [];
+    for (const h of S.holdings.filter(h => h.symbol)){
+      for (const fn of ["GLOBAL_QUOTE", "DIVIDENDS"]){ try { await av(fn, h.symbol, true); } catch(err){ errs.push(err.message); } }
+    }
+    await fxRate();
+    busy = false; mktErr = [...new Set(errs)].join(" "); render();
+  }
+});
+
+/* first load: use cached data, fetch what's missing quietly */
+render();
+/* Installable phone app: cache the app so it opens with no connection. */
+if (MODE === "pwa" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+window.addEventListener("online", () => { hud(); });
+window.addEventListener("offline", () => { hud(); });
+if (MODE === "online") cloudInit();
+else (async () => {
+  await pull();
+  await fxRate();
+  for (const h of S.holdings.filter(h => h.symbol)){
+    for (const fn of ["GLOBAL_QUOTE", "DIVIDENDS"]) if (!cached(fn, h.symbol)) { try { await av(fn, h.symbol); } catch(e){ mktErr = e.message; } }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
