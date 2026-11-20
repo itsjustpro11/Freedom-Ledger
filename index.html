@@ -407,6 +407,110 @@ body{transition:background-color .4s}
 .sw-vault em{background:linear-gradient(90deg,#0f6b4a,#2fbf83,#ddb870)}
 .sw-platinum em{background:linear-gradient(90deg,#2c5cdc,#7aa2ff,#e9eef8)}
 
+/* ===== Layout without a sidebar: brand on top, sections in a bottom-left menu ===== */
+.app{grid-template-columns:minmax(0,1fr)!important}
+main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!important;padding-top:max(20px, env(safe-area-inset-top, 0px))}
+.topline{max-width:1080px;margin:0 auto 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topline .brand{text-decoration:none;color:var(--ink)}
+.ro-link{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line-hi);padding:4px 0 4px 12px;text-decoration:none;color:inherit;border-radius:0 3px 3px 0}
+.ro-link:hover{background:rgba(var(--acc-rgb),.07);border-left-color:var(--accent)}
+
+/* Frosted glass, used by the menu and the day card */
+.glassy{background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.05) 42%,rgba(var(--acc-rgb),.08));
+  -webkit-backdrop-filter:blur(26px) saturate(185%);backdrop-filter:blur(26px) saturate(185%);
+  border:1px solid rgba(255,255,255,.2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(255,255,255,.08),inset 0 0 30px rgba(255,255,255,.04),0 24px 64px rgba(0,0,0,.55)}
+
+.dock{position:fixed;left:max(16px, env(safe-area-inset-left, 0px));bottom:max(16px, env(safe-area-inset-bottom, 0px));z-index:40;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.dock-btn{display:inline-flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;border-radius:999px;cursor:pointer;color:var(--ink);font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:700;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.dock-btn:hover{transform:translateY(-2px)}
+.dock-btn:active{transform:scale(.96)}
+.burger{position:relative;width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--prim);box-shadow:var(--glow)}
+.burger::before,.burger::after{content:"";position:absolute;left:10px;right:10px;height:2px;border-radius:2px;background:var(--accent-ink);transition:top .35s cubic-bezier(.2,.8,.2,1),transform .35s cubic-bezier(.2,.8,.2,1)}
+.burger::before{top:13px} .burger::after{top:19px}
+.dock-btn[aria-expanded="true"] .burger::before{top:16px;transform:rotate(45deg)}
+.dock-btn[aria-expanded="true"] .burger::after{top:16px;transform:rotate(-45deg)}
+.menu{width:min(300px, calc(100vw - 32px));max-height:calc(100vh - 110px);overflow-y:auto;padding:10px;border-radius:26px;transform-origin:16px 100%}
+.menu .nav{flex-direction:column;overflow:visible;gap:2px}
+.menu .nav a{justify-content:flex-start;gap:12px;padding:11px 14px;white-space:nowrap;border-radius:14px}
+.menu .nav a .ic{width:20px;text-align:center;color:var(--accent);font-family:var(--body)}
+.menu .nav a[aria-current="page"]::before{display:none}
+:root[data-skin="vault"] .menu .nav a[aria-current="page"]{padding-left:14px}
+.menu .foot{font-family:var(--mono);font-size:.64rem;line-height:1.6;color:var(--muted);border-top:1px solid rgba(255,255,255,.12);margin:8px 6px 2px;padding-top:10px}
+@media (prefers-reduced-motion: no-preference){
+  .menu:not([hidden]){animation:menuIn .42s cubic-bezier(.2,.9,.25,1.08) both}
+  .menu:not([hidden]) .nav a{animation:menuItem .45s cubic-bezier(.2,.8,.2,1) backwards}
+  .menu .nav a:nth-child(2){animation-delay:.03s} .menu .nav a:nth-child(3){animation-delay:.06s} .menu .nav a:nth-child(4){animation-delay:.09s}
+  .menu .nav a:nth-child(5){animation-delay:.12s} .menu .nav a:nth-child(6){animation-delay:.15s} .menu .nav a:nth-child(7){animation-delay:.18s} .menu .nav a:nth-child(8){animation-delay:.21s}
+}
+@media (max-height:640px){ .menu .foot{display:none} .menu .nav a{padding-block:9px} }
+@keyframes menuIn{from{opacity:0;transform:translateY(14px) scale(.88);filter:blur(8px)}}
+@keyframes menuItem{from{opacity:0;transform:translateX(-12px)}}
+
+/* Glass day card */
+.glass{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px))}
+.glass-back{position:absolute;inset:0;background:rgba(0,0,0,.3)}
+.glass-card{position:relative;width:min(440px,100%);max-height:100%;overflow-y:auto;border-radius:32px;padding:22px;display:flex;flex-direction:column;gap:16px;color:var(--ink);outline:none}
+.glass-card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(130% 70% at 15% -15%,rgba(255,255,255,.24),transparent 52%),radial-gradient(80% 50% at 100% 110%,rgba(var(--acc-rgb),.14),transparent 60%)}
+.glass-card>*{position:relative}
+.g-head{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:8px;text-align:center}
+.g-title h3{color:var(--ink);font-size:1.05rem;letter-spacing:.06em}
+.g-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:var(--ink);font-size:1.3rem;line-height:1;cursor:pointer;transition:background .2s,transform .2s}
+.g-btn:hover{background:rgba(255,255,255,.16)} .g-btn:active{transform:scale(.92)}
+.g-stat{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:8px}
+.g-field{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.g-field input,.g-field textarea{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:18px;color:var(--ink);padding:12px 16px;font:16px/1.5 var(--body);letter-spacing:0;text-transform:none;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.g-field input:focus,.g-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.2)}
+.g-field .g-amt{font-family:var(--mono);font-size:1.8rem;font-weight:600}
+.g-field textarea{min-height:160px;resize:vertical}
+.g-foot{display:flex;justify-content:space-between;gap:10px}
+.g-foot .btn{border-radius:999px;clip-path:none;padding:10px 18px}
+@media (prefers-reduced-motion: no-preference){
+  .glass:not([hidden]) .glass-back{animation:fadeIn .3s ease both}
+  .glass:not([hidden]) .glass-card{animation:glassIn .5s cubic-bezier(.2,.9,.25,1.06) both}
+  .glass-card.swap>*{animation:fadeIn .3s ease both}
+}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes glassIn{from{opacity:0;transform:translateY(24px) scale(.92);filter:blur(10px)}}
+
+/* Hustle calendar */
+.cal-nav{display:flex;gap:6px}
+.cal-nav .btn{min-width:40px;justify-content:center}
+.hcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.hcal .wd{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:2px}
+.day{aspect-ratio:1/1;min-width:0;border:1px solid var(--line);border-radius:12px;background:rgba(var(--acc-rgb),.03);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:7px;position:relative;font:inherit;text-align:left;transition:transform .2s,box-shadow .2s,border-color .2s}
+.day:hover{transform:translateY(-2px);border-color:var(--line-hi);box-shadow:var(--glow)}
+.day:active{transform:scale(.95)}
+.day .dn{font-family:var(--display);font-weight:700;font-size:.95rem;line-height:1}
+.day .da{font-family:var(--mono);font-size:.7rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day .nd{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent)}
+.day.hit{background:linear-gradient(160deg,color-mix(in srgb,var(--good) 42%,transparent),color-mix(in srgb,var(--good) 12%,transparent));border-color:color-mix(in srgb,var(--good) 70%,transparent);box-shadow:0 0 16px color-mix(in srgb,var(--good) 25%,transparent)}
+.day.miss{background:linear-gradient(160deg,color-mix(in srgb,var(--bad) 38%,transparent),color-mix(in srgb,var(--bad) 10%,transparent));border-color:color-mix(in srgb,var(--bad) 65%,transparent)}
+.day.today{outline:2px solid var(--accent);outline-offset:2px}
+.day.future{opacity:.55}
+.day.pad{visibility:hidden}
+.hnotes{display:flex;flex-direction:column}
+.hnote{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 4px;color:var(--ink);font:inherit;cursor:pointer;border-radius:6px}
+.hnote:last-child{border-bottom:0}
+.hnote:hover{background:rgba(var(--acc-rgb),.05)}
+.hnote>span:last-child{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.hn-t{font-size:.9rem;color:var(--muted);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media (prefers-reduced-motion: no-preference){
+  .hcal.slide-next>*{animation:calNext .45s cubic-bezier(.2,.8,.2,1) backwards}
+  .hcal.slide-prev>*{animation:calPrev .45s cubic-bezier(.2,.8,.2,1) backwards}
+  .hcal.slide-fade>*{animation:fadeIn .35s ease backwards}
+}
+@keyframes calNext{from{opacity:0;transform:translateX(24px)}}
+@keyframes calPrev{from{opacity:0;transform:translateX(-24px)}}
+@media (max-width:560px){
+  .hcal{gap:4px}
+  .day{padding:4px 5px;border-radius:9px}
+  .day .dn{font-size:.8rem}
+  .day .da{font-size:.56rem}
+  .day .nd{top:5px;right:5px;width:5px;height:5px}
+  .cal-nav .btn{padding:6px 10px}
+}
+
 /* ===== Tab transitions. Old page leaves and new page arrives, styled per skin; panels then cascade in. ===== */
 #view{view-transition-name:page}
 :root.vt-skin #view{view-transition-name:none}
@@ -442,19 +546,30 @@ body{transition:background-color .4s}
 </head>
 <body>
 <div class="app">
-  <aside class="rail">
-    <div class="brand"><span class="reactor" aria-hidden="true"></span><div><h1>Freedom Ledger</h1><small>Wealth command</small></div></div>
-    <nav class="nav" id="nav">
-      <a href="#overview">Overview</a>
-      <a href="#budget">Budget</a>
-      <a href="#debt">Debt payoff</a>
-      <a href="#goals">Goals</a>
-      <a href="#invest">Invest &amp; dividends</a>
-      <a href="#setup">Setup</a>
+  <main>
+    <div class="topline"><a class="brand" href="#overview"><span class="reactor" aria-hidden="true"></span><div><h1>Freedom Ledger</h1><small>Wealth command</small></div></a></div>
+    <div class="hud-bar" id="hud" aria-live="off"></div><div class="page" id="view"></div>
+  </main>
+</div>
+<div class="dock" id="dock">
+  <div class="menu glassy" id="menu" hidden>
+    <nav class="nav" id="nav" aria-label="Sections">
+      <a href="#overview" data-label="Overview"><span class="ic" aria-hidden="true">◉</span>Overview</a>
+      <a href="#budget" data-label="Budget"><span class="ic" aria-hidden="true">▤</span>Budget</a>
+      <a href="#debt" data-label="Debt payoff"><span class="ic" aria-hidden="true">↘</span>Debt payoff</a>
+      <a href="#goals" data-label="Goals"><span class="ic" aria-hidden="true">◎</span>Goals</a>
+      <a href="#assets" data-label="Assets"><span class="ic" aria-hidden="true">◆</span>Assets</a>
+      <a href="#invest" data-label="Invest"><span class="ic" aria-hidden="true">▲</span>Invest &amp; dividends</a>
+      <a href="#hustle" data-label="Hustle"><span class="ic" aria-hidden="true">✦</span>Hustle</a>
+      <a href="#setup" data-label="Setup"><span class="ic" aria-hidden="true">⚙</span>Setup</a>
     </nav>
     <div class="foot">Market data: Alpha Vantage. Exchange rates: Frankfurter. Both found via the public-apis list.</div>
-  </aside>
-  <main><div class="hud-bar" id="hud" aria-live="off"></div><div class="page" id="view"></div></main>
+  </div>
+  <button class="dock-btn glassy" id="menuBtn" aria-expanded="false" aria-controls="menu"><span class="burger" aria-hidden="true"></span><span id="dockLabel">Overview</span></button>
+</div>
+<div class="glass" id="glass" hidden>
+  <div class="glass-back" data-gclose></div>
+  <div class="glass-card glassy" role="dialog" aria-modal="true" aria-labelledby="g-title" tabindex="-1" id="glassCard"></div>
 </div>
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-back" data-close></div>
@@ -505,12 +620,27 @@ function sampleState(){
       {id:uid(), name:"Holiday", target:2500, deadline:(y+1)+"-06-30", contributions:[
         {id:uid(), date:y+"-10-15", amount:200, note:""} ]}
     ],
-    holdings: [ {id:uid(), symbol:"IBM", shares:10} ]
+    holdings: [ {id:uid(), symbol:"IBM", shares:10} ],
+    assets: [
+      {id:uid(), name:"Rental flat", type:"Property", cost:85000, value:98000, monthly:650},
+      {id:uid(), name:"Delivery motorbike", type:"Vehicle", cost:3200, value:2600, monthly:400},
+      {id:uid(), name:"Vending machine", type:"Business", cost:1800, value:1500, monthly:120}
+    ],
+    hustle: { target:100, days:(() => { const out = {}, amts = [130,95,160,110,70,140,125,0,180,105,90,150,135,115];
+      const notes = { 2:"Weekend market stall sold out by 2pm.", 4:"Slow day. Rain kept people home.", 9:"Big corporate order. Ask them about monthly supply." };
+      amts.forEach((a, i) => { const d = new Date(); d.setDate(d.getDate() - (amts.length - i)); out[ymd(d)] = { amount:a, note:notes[i] || "" }; });
+      return out; })() }
   };
 }
 function blankState(){
   const s = sampleState();
-  return { isSample:false, settings:s.settings, income:[], expenses:[], debts:[], extraPayment:0, strategy:"avalanche", goals:[], holdings:[] };
+  return { isSample:false, settings:s.settings, income:[], expenses:[], debts:[], extraPayment:0, strategy:"avalanche", goals:[], holdings:[], assets:[], hustle:{ target:0, days:{} } };
+}
+/* Older saves (and backups) don't have the newer sections yet. */
+function normalize(){
+  if (!Array.isArray(S.assets)) S.assets = [];
+  if (!S.hustle || typeof S.hustle !== "object") S.hustle = { target:0, days:{} };
+  if (!S.hustle.days || typeof S.hustle.days !== "object") S.hustle.days = {};
 }
 function load(){ try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch(e){} return sampleState(); }
 let S = load();
@@ -773,7 +903,8 @@ function viewOverview(){
   const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares))).sort((a,b) => (a.pay||a.ex).localeCompare(b.pay||b.ex)).slice(0, 4);
   const debtFree = S.debts.length && !sim.never ? monthLabel(addMonths(sim.months)) : (S.debts.length ? "Not on track" : "Debt-free");
   const portVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0);
-  const net = gSaved + portVal - t.debtTotal;
+  const AT = assetTotals();
+  const net = gSaved + portVal + AT.value - t.debtTotal;
   const gp = gTarget ? Math.min(100, gSaved / gTarget * 100) : 0;
   return `
   <div class="page-head"><div><div class="eyebrow">${new Date().toLocaleDateString(undefined,{month:"long",year:"numeric"})}</div><h2>Where your money stands</h2>
@@ -783,11 +914,12 @@ function viewOverview(){
     <div class="gauge" style="--p:${gp.toFixed(1)}" role="img" aria-label="Goals ${gp.toFixed(0)} percent funded"><div class="in"><b>${gp.toFixed(0)}%</b><span>Goals funded</span></div></div>
     <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
       <div><div class="eyebrow">Net position</div><div class="net ${net >= 0 ? "pos" : "neg"}">${money(net)}</div>
-        <div class="small muted">Goal savings${fx ? " + shares" : ""} minus debt <span class="hint">· forecast ›</span></div></div>
+        <div class="small muted">Goal savings${fx ? " + shares" : ""}${S.assets.length ? " + assets" : ""} minus debt <span class="hint">· forecast ›</span></div></div>
       <div class="readout">
         <div class="tap" ${tap("left")}><span>Cash flow / month</span><b class="${t.left >= 0 ? "pos" : "neg"}">${money(t.left)}</b></div>
         <div class="tap" ${tap("debt")}><span>Debt-free</span><b>${esc(debtFree)}</b></div>
         <div class="tap" ${tap("div")}><span>Dividends / yr</span><b class="goldc">${money(annualDiv, "USD")}</b></div>
+        ${S.assets.length ? `<a class="ro-link" href="#assets"><span>Assets earn / month</span><b class="pos">${money(AT.monthly)}</b></a>` : ""}
       </div>
     </div>
   </div>
@@ -1043,6 +1175,152 @@ function viewInvest(){
   </div>`;
 }
 
+/* ---------- Assets: what you own, what it cost, what it's worth, what it pays ---------- */
+const ASSET_TYPES = ["Property","Vehicle","Business","Equipment","Land","Collectible","Other"];
+function assetTotals(){ const a = S.assets || []; return { cost:sum(a, x => x.cost), value:sum(a, x => x.value), monthly:sum(a, x => x.monthly) }; }
+const span = m => m < 12 ? Math.ceil(m) + (Math.ceil(m) === 1 ? " month" : " months") : (m / 12).toFixed(1) + " years";
+function viewAssets(){
+  const A = assetTotals(), gain = A.value - A.cost, yc = A.cost ? A.monthly * 12 / A.cost * 100 : 0, yv = A.value ? A.monthly * 12 / A.value * 100 : 0;
+  const rows = S.assets.map(a => { const g = num(a.value) - num(a.cost), gp = num(a.cost) ? g / num(a.cost) * 100 : 0, y = num(a.cost) ? num(a.monthly) * 12 / num(a.cost) * 100 : 0;
+    const f = (k, l) => `<td class="n"><input class="cell" type="number" step="any" min="0" data-c="assets" data-id="${a.id}" data-f="${k}" value="${num(a[k])}" aria-label="${l}"></td>`;
+    return `<tr><td><input class="cell" data-c="assets" data-id="${a.id}" data-f="name" value="${esc(a.name)}" aria-label="Asset name"></td>
+      <td><select class="cell" data-c="assets" data-id="${a.id}" data-f="type" aria-label="Type">${ASSET_TYPES.map(t => `<option ${t === a.type ? "selected" : ""}>${t}</option>`).join("")}</select></td>
+      ${f("cost","What it cost")}${f("value","What it's worth now")}${f("monthly","What it makes each month")}
+      <td class="n num ${g >= 0 ? "pos" : "neg"}">${g >= 0 ? "+" : ""}${money(g)}<div class="small muted">${g >= 0 ? "+" : ""}${gp.toFixed(1)}%</div></td>
+      <td class="n num">${pct(y)}</td>
+      <td><button class="btn ghost" data-act="del" data-c="assets" data-id="${a.id}" aria-label="Remove">✕</button></td></tr>`; }).join("");
+  const max = Math.max(1, ...S.assets.map(a => Math.max(num(a.value), num(a.cost))));
+  const earners = S.assets.filter(a => num(a.monthly) > 0).sort((x, y) => num(y.monthly) - num(x.monthly));
+  return `
+  <div class="page-head"><div><div class="eyebrow">Assets</div><h2>What you own</h2>
+  <p>List what you own: property, vehicles, a business, equipment. Enter what you paid, what it's worth today and what it brings in each month.</p></div>
+  <button class="btn primary" data-act="addAsset">+ Add asset</button></div>
+  <div class="grid g4">
+    <div class="panel stat"><span class="eyebrow">Worth today</span><span class="v">${money(A.value)}</span><span class="s ${gain >= 0 ? "pos" : "neg"}">${gain >= 0 ? "+" : ""}${money(gain)} vs what you paid</span></div>
+    <div class="panel stat"><span class="eyebrow">You paid</span><span class="v">${money(A.cost)}</span><span class="s">${S.assets.length} asset${S.assets.length === 1 ? "" : "s"}</span></div>
+    <div class="panel stat"><span class="eyebrow">Earns each month</span><span class="v pos">${money(A.monthly)}</span><span class="s">${money(A.monthly * 12)} a year</span></div>
+    <div class="panel stat"><span class="eyebrow">Yearly return</span><span class="v goldc">${pct(yc)}</span><span class="s">on what you paid · ${pct(yv)} on today's value</span></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Your assets</h3><button class="btn" data-act="addAsset">+ Add asset</button></div>
+    ${S.assets.length ? `<div class="tbl-wrap"><table><thead><tr><th>Asset</th><th>Type</th><th class="n">Cost</th><th class="n">Worth now</th><th class="n">Per month</th><th class="n">Gain / loss</th><th class="n">Return / yr</th><th></th></tr></thead>
+      <tbody>${rows}</tbody><tfoot><tr><td colspan="2">Total</td><td class="n num">${money(A.cost)}</td><td class="n num">${money(A.value)}</td><td class="n num">${money(A.monthly)}</td><td class="n num ${gain >= 0 ? "pos" : "neg"}">${gain >= 0 ? "+" : ""}${money(gain)}</td><td class="n num">${pct(yc)}</td><td></td></tr></tfoot></table></div>`
+      : `<p class="empty">Nothing here yet. Press “Add asset” to list something you own.</p>`}
+    <p class="note" style="margin:0">Asset income isn't added to your budget automatically. When it lands in your account, add it under Budget → Income.</p>
+  </div>
+  ${S.assets.length ? `<div class="grid g2">
+    <div class="panel"><h3>Worth now vs what you paid</h3>
+      <div class="hbars">${S.assets.map(a => `<div class="hb"><div class="hb-l"><span>${esc(a.name)}</span><span class="num">${money(num(a.value))} <span class="muted small">· paid ${money(num(a.cost))}</span></span></div>
+        <div class="bar ${num(a.value) < num(a.cost) ? "over" : ""}"><i style="width:${num(a.value) / max * 100}%"></i><em style="left:${Math.min(99.5, num(a.cost) / max * 100)}%"></em></div></div>`).join("")}</div>
+      <p class="small muted" style="margin:0">The white line marks what you paid. Red bars are worth less than they cost.</p></div>
+    <div class="panel"><h3>How fast each one pays you back</h3>
+      ${earners.length ? `<ul class="tips">${earners.map(a => `<li><b>${esc(a.name)}</b><span>Earns ${money(num(a.monthly))} a month, so its income covers what you paid in about <b>${span(num(a.cost) / num(a.monthly))}</b>.</span></li>`).join("")}</ul>`
+        : `<p class="empty">None of your assets earn money yet. Enter a monthly amount to see how fast one pays for itself.</p>`}
+    </div>
+  </div>` : ""}`;
+}
+
+/* ---------- Hustle: a daily target, a calendar that turns green or red, and notes for each day ---------- */
+let hMonth = todayISO().slice(0, 7), hSlide = "";
+const cmoney = v => { try { return new Intl.NumberFormat(undefined, { style:"currency", currency:S.settings.currency, notation:"compact", maximumFractionDigits:1 }).format(v); } catch(e){ return String(Math.round(v)); } };
+const hasAmt = d => d && d.amount !== "" && d.amount !== null && d.amount !== undefined;
+function hustleStatus(iso){
+  const H = S.hustle, d = H.days[iso], t = num(H.target), today = todayISO();
+  if (hasAmt(d)) return (t > 0 ? num(d.amount) >= t : num(d.amount) > 0) ? "hit" : "miss";
+  const start = Object.keys(H.days).filter(k => hasAmt(H.days[k])).sort()[0];
+  if (iso < today && start && iso >= start) return "miss";   // a past day you skipped, after you started tracking
+  return iso === today ? "today" : iso > today ? "future" : "";
+}
+function hustleStreak(){
+  let d = new Date(), n = 0;
+  if (hustleStatus(ymd(d)) !== "hit") d.setDate(d.getDate() - 1);   // today still counts as open
+  while (hustleStatus(ymd(d)) === "hit"){ n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function viewHustle(){
+  const H = S.hustle, t = num(H.target), today = todayISO();
+  const [yy, mm] = hMonth.split("-").map(Number), first = new Date(yy, mm - 1, 1), nDays = new Date(yy, mm, 0).getDate(), lead = (first.getDay() + 6) % 7;
+  const isos = Array.from({ length:nDays }, (_, i) => ymd(new Date(yy, mm - 1, i + 1)));
+  const st = isos.map(hustleStatus), hit = st.filter(s => s === "hit").length, miss = st.filter(s => s === "miss").length;
+  const earned = sum(isos, i => hasAmt(H.days[i]) ? H.days[i].amount : 0), monthTarget = t * nDays;
+  const left = isos.filter(i => i >= today).length, need = left && monthTarget > earned ? (monthTarget - earned) / left : 0;
+  const best = Math.max(0, ...isos.map(i => hasAmt(H.days[i]) ? num(H.days[i].amount) : 0));
+  const wd = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const notes = isos.filter(i => H.days[i] && String(H.days[i].note || "").trim()).reverse();
+  const cells = Array.from({ length:lead }, () => `<span class="day pad" aria-hidden="true"></span>`).join("") + isos.map((iso, i) => {
+    const d = H.days[iso] || {}, s = st[i], lbl = { hit:"target hit", miss:"target missed", today:"today", future:"upcoming", "":"" }[s];
+    return `<button class="day ${s}" data-day="${iso}" aria-label="${fmtDate(iso, { weekday:"long", day:"numeric", month:"long" })}${lbl ? ", " + lbl : ""}${hasAmt(d) ? ", earned " + money(num(d.amount)) : ""}${d.note ? ", has a note" : ""}">
+      <span class="dn">${i + 1}</span>${hasAmt(d) ? `<span class="da">${cmoney(num(d.amount))}</span>` : ""}${d.note ? `<i class="nd" aria-hidden="true"></i>` : ""}</button>`; }).join("");
+  const anim = hSlide; hSlide = "";
+  return `
+  <div class="page-head"><div><div class="eyebrow">Hustle</div><h2>Hit your daily number</h2>
+  <p>Set a daily target, then tap a day to log what you made and jot down notes. Days turn green when you hit the target and red when you don't.</p></div></div>
+  <div class="grid g4">
+    <div class="panel stat"><span class="eyebrow">Daily target</span><label class="field" style="margin-top:2px"><input type="number" min="0" step="any" data-ht="1" value="${t || ""}" placeholder="e.g. 100" aria-label="Daily target"></label><span class="s">${t ? money(monthTarget) + " for this month" : "Set one to start colouring days"}</span></div>
+    <div class="panel stat"><span class="eyebrow">Made this month</span><span class="v pos">${money(earned)}</span><span class="s">${monthTarget ? pct(earned / monthTarget * 100) + " of " + money(monthTarget) : "Best day: " + money(best)}</span></div>
+    <div class="panel stat"><span class="eyebrow">Days hit</span><span class="v">${hit}<span class="muted" style="font-size:1rem"> / ${hit + miss}</span></span><span class="s">${hit + miss ? pct(hit / (hit + miss) * 100) + " hit rate" : "No days logged yet"}</span></div>
+    <div class="panel stat"><span class="eyebrow">Streak</span><span class="v goldc">${hustleStreak()} ${hustleStreak() === 1 ? "day" : "days"}</span><span class="s">${need ? "Make " + money(need) + "/day to finish the month on target" : monthTarget && earned >= monthTarget ? "Month target reached" : "Days in a row on target"}</span></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>${first.toLocaleDateString(undefined, { month:"long", year:"numeric" })}</h3>
+      <div class="cal-nav"><button class="btn" data-act="hMonth" data-v="-1" aria-label="Previous month">‹</button><button class="btn" data-act="hMonth" data-v="0">Today</button><button class="btn" data-act="hMonth" data-v="1" aria-label="Next month">›</button></div></div>
+    <div class="hcal ${anim}">${wd.map(w => `<span class="wd">${w}</span>`).join("")}${cells}</div>
+    <div class="row small muted" style="gap:16px"><span class="lg"><i style="background:var(--good)"></i>Target hit</span><span class="lg"><i style="background:var(--bad)"></i>Missed</span><span class="lg"><i style="background:var(--accent);border-radius:50%"></i>Has notes</span></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Notes this month</h3></div>
+    ${notes.length ? `<div class="hnotes">${notes.map(i => `<button class="hnote" data-day="${i}"><span class="date-badge"><b>${Number(i.slice(8))}</b><span>${new Date(i + "T00:00:00").toLocaleDateString(undefined, { weekday:"short" })}</span></span>
+      <span><span class="chip ${hustleStatus(i) === "hit" ? "good" : hustleStatus(i) === "miss" ? "bad" : ""}">${hasAmt(H.days[i]) ? money(num(H.days[i].amount)) : "No amount"}</span><span class="hn-t">${esc(H.days[i].note)}</span></span></button>`).join("")}</div>`
+      : `<p class="empty">Tap any day on the calendar to write a note.</p>`}
+  </div>`;
+}
+
+/* The glass day card that floats over the page */
+let gDay = null, gLastFocus = null;
+function dayCard(iso){
+  const d = S.hustle.days[iso] || {}, t = num(S.hustle.target), s = hustleStatus(iso);
+  const dt = new Date(iso + "T00:00:00"), step = n => { const x = new Date(dt); x.setDate(x.getDate() + n); return ymd(x); };
+  return `
+    <div class="g-head"><button class="g-btn" data-gday="${step(-1)}" aria-label="Previous day">‹</button>
+      <div class="g-title"><span class="eyebrow">${dt.toLocaleDateString(undefined, { weekday:"long" })}</span><h3 id="g-title">${dt.toLocaleDateString(undefined, { day:"numeric", month:"long", year:"numeric" })}</h3></div>
+      <button class="g-btn" data-gday="${step(1)}" aria-label="Next day">›</button></div>
+    <div id="gStat">${dayStat(iso)}</div>
+    <label class="g-field">What you made<input id="gAmt" class="g-amt" type="number" inputmode="decimal" min="0" step="any" value="${hasAmt(d) ? num(d.amount) : ""}" placeholder="0"></label>
+    <label class="g-field">Notes<textarea id="gNote" placeholder="What worked, who to follow up with, ideas for tomorrow…">${esc(d.note || "")}</textarea></label>
+    <div class="g-foot"><button class="btn" data-gclear>Clear day</button><button class="btn primary" data-gclose>Done</button></div>`;
+}
+function dayStat(iso){
+  const d = S.hustle.days[iso], t = num(S.hustle.target), s = hustleStatus(iso), a = hasAmt(d) ? num(d.amount) : 0;
+  const chip = { hit:`<span class="chip good">Target hit</span>`, miss:`<span class="chip bad">Missed</span>`, today:`<span class="chip gold">Today</span>`, future:`<span class="chip">Upcoming</span>`, "":`<span class="chip">Not logged</span>` }[s];
+  return `<div class="g-stat">${chip}<span class="small muted">${t ? (a >= t ? money(a - t) + " over your " + money(t) + " target" : money(t - a) + " short of your " + money(t) + " target") : "No daily target set yet"}</span></div>
+    ${t ? `<div class="bar ${s === "miss" ? "over" : ""}"><i style="width:${Math.min(100, a / t * 100)}%"></i></div>` : ""}`;
+}
+function openDay(iso){
+  const g = document.getElementById("glass"), card = document.getElementById("glassCard");
+  gDay = iso; card.innerHTML = dayCard(iso);
+  if (g.hidden){ gLastFocus = document.activeElement; closeMenu(); g.hidden = false; document.body.style.overflow = "hidden"; }
+  else { card.classList.remove("swap"); void card.offsetWidth; card.classList.add("swap"); }
+  card.focus({ preventScroll:true });
+}
+function closeDay(){
+  const g = document.getElementById("glass"); if (g.hidden) return;
+  g.hidden = true; gDay = null; document.body.style.overflow = "";
+  render();
+  const back = gLastFocus && gLastFocus.dataset && gLastFocus.dataset.day ? document.querySelector(`[data-day="${gLastFocus.dataset.day}"]`) : null;
+  if (back) back.focus({ preventScroll:true });
+}
+document.getElementById("glass").addEventListener("input", e => {
+  if (!gDay || !e.target.matches("#gAmt,#gNote")) return;
+  const raw = document.getElementById("gAmt").value, note = document.getElementById("gNote").value;
+  if (raw === "" && !note.trim()) delete S.hustle.days[gDay];
+  else S.hustle.days[gDay] = { amount: raw === "" ? "" : num(raw), note };
+  save();
+  document.getElementById("gStat").innerHTML = dayStat(gDay);
+});
+document.getElementById("glass").addEventListener("click", e => {
+  if (e.target.closest("[data-gclose]")) return closeDay();
+  if (e.target.closest("[data-gclear]")){ delete S.hustle.days[gDay]; save(); openDay(gDay); return; }
+  const n = e.target.closest("[data-gday]"); if (n){ hMonth = n.dataset.gday.slice(0, 7); openDay(n.dataset.gday); }
+});
+
 function viewSettings(){
   const st = S.settings, curs = ["USD","ZAR","EUR","GBP","AUD","CAD","NZD","INR","JPY","CHF","SEK","NOK","DKK","PLN","BRL","MXN","SGD","HKD","CNY","KRW","TRY","ILS","PHP","THB","IDR","MYR","CZK","HUF","RON","ISK"];
   return `
@@ -1180,7 +1458,7 @@ function detailDiv(){
 function detailNet(){
   const t = totals(), fx = fxCached(), sim = simulate(S.debts, S.extraPayment, S.strategy);
   const gSaved = sum(S.goals, g => goalStats(g).saved), gAvg = sum(S.goals, g => goalStats(g).avg);
-  const port = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0);
+  const port = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0) + assetTotals().value;
   const N = 36, debtS = [], assetS = [];
   for (let i = 0; i <= N; i++){ debtS.push(i < sim.series.length ? sim.series[i] : (sim.never ? sim.series[sim.series.length - 1] : 0)); assetS.push(gSaved + gAvg * i + port); }
   const cross = assetS.findIndex((a, i) => a >= debtS[i]);
@@ -1192,7 +1470,7 @@ function detailNet(){
   L.push({ t:"Check in once a month.", b:"Update your balances on the same day each month. Watching the gap close keeps you going." });
   return { title:"Net position", link:null,
     body: sec("What you own vs what you owe · next 3 years", lineChart([{ data:debtS, color:"var(--bad)" }, { data:assetS, color:"var(--good)", fill:true }], { label:"Assets vs debt", xl:i => monthLabel(addMonths(i)) })
-        + legend([["var(--good)", "Savings + shares"], ["var(--bad)", "Debt"]]) + `<p class="small muted" style="margin:0">Where green rises above red, you own more than you owe.</p>`)
+        + legend([["var(--good)", S.assets.length ? "Savings, shares + assets" : "Savings + shares"], ["var(--bad)", "Debt"]]) + `<p class="small muted" style="margin:0">Where green rises above red, you own more than you owe.</p>`)
       + sec("Ways to improve", tips(L)) };
 }
 
@@ -1219,13 +1497,20 @@ document.addEventListener("click", e => {
     if (k === "strategy") S.strategy = v;
     save(); render(); openDetail(openKey); return; }
   if (e.target.closest("[data-close]")){ closeDetail(); return; }
+  if (e.target.closest("#menuBtn")){ document.getElementById("menu").hidden ? openMenu() : closeMenu(); return; }
+  if (!e.target.closest("#menu") || e.target.closest("#menu a")) closeMenu();
+  const day = e.target.closest("#view [data-day]"); if (day){ openDay(day.dataset.day); return; }
   if (e.target.closest("[data-skin-next]")){ const ks = Object.keys(SKINS); setSkin(ks[(ks.indexOf(skinKey()) + 1) % ks.length], e); return; }
   const sk = e.target.closest("[data-skin-pick]"); if (sk){ setSkin(sk.dataset.skinPick, e); return; }
   const d = e.target.closest("[data-detail]");
   if (d && !e.target.closest("input,select,textarea,a,button")) openDetail(d.dataset.detail);
 });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") return closeDetail();
+  if (e.key === "Escape"){
+    if (!document.getElementById("glass").hidden) return closeDay();
+    if (!document.getElementById("menu").hidden) return closeMenu(true);
+    return closeDetail();
+  }
   const d = e.target.closest && e.target.closest("[data-detail]");
   if (d && e.target === d && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openDetail(d.dataset.detail); }
 });
@@ -1251,14 +1536,14 @@ async function loadPhone(){
 }
 
 /* ---------- render & events ---------- */
-const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, invest:viewInvest, setup:viewSettings };
+const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, assets:viewAssets, invest:viewInvest, hustle:viewHustle, setup:viewSettings };
 function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
 const SKINS = {
   stark:    { name:"Stark Gold",    tag:"Onyx, gold and emerald on a heads-up grid. Pages scan in.", meta:"#050605" },
   vault:    { name:"Emerald Vault", tag:"Private-bank green, champagne gold and art-deco fans. Pages fade in like a vault door.", meta:"#03140d" },
   platinum: { name:"Black Card",    tag:"Platinum, sapphire and rose gold on banknote engraving. Pages glide sideways.", meta:"#06070c" }
 };
-const ORDER = ["overview","budget","debt","goals","invest","setup"];
+const ORDER = ["overview","budget","debt","goals","assets","invest","hustle","setup"];
 const reduceMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
 let lastRoute = null, enterTimer;
 function skinKey(){ return SKINS[S.settings.skin] ? S.settings.skin : "stark"; }
@@ -1279,21 +1564,21 @@ function setSkin(k, ev){
 }
 /* A transition can be skipped (another tab tapped mid-animation). That's fine; don't report it as an error. */
 function quiet(t){ [t.ready, t.finished, t.updateCallbackDone].forEach(p => p && p.catch(() => {})); return t; }
-function revealNav(){
-  const nav = document.getElementById("nav"), cur = nav.querySelector("[aria-current]");
-  if (!cur || nav.scrollWidth <= nav.clientWidth) return;
-  const x = cur.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
-  nav.scrollTo({ left: x - (nav.clientWidth - cur.offsetWidth) / 2, behavior: reduceMotion.matches ? "auto" : "smooth" });
-}
+/* Bottom-left menu */
+function openMenu(){ const m = document.getElementById("menu"); m.hidden = false; document.getElementById("menuBtn").setAttribute("aria-expanded", "true");
+  (m.querySelector("[aria-current]") || m.querySelector("a")).focus({ preventScroll:true }); }
+function closeMenu(focusBtn){ const m = document.getElementById("menu"); if (m.hidden) return; m.hidden = true;
+  const b = document.getElementById("menuBtn"); b.setAttribute("aria-expanded", "false"); if (focusBtn) b.focus(); }
 function render(){
   const r = route();
-  applySkin();
+  normalize(); applySkin();
   document.querySelectorAll("#nav a").forEach(a => a.getAttribute("href") === "#" + r ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+  document.getElementById("dockLabel").textContent = document.querySelector(`#nav a[href="#${r}"]`).dataset.label;
   const v = document.getElementById("view"), changed = r !== lastRoute; lastRoute = r;
   clearTimeout(enterTimer);
   v.classList.toggle("enter", changed && !reduceMotion.matches);
   v.innerHTML = views[r]();
-  if (changed){ enterTimer = setTimeout(() => v.classList.remove("enter"), 1000); revealNav(); }
+  if (changed) enterTimer = setTimeout(() => v.classList.remove("enter"), 1000);
   hud();
   if (r === "setup") loadPhone();
 }
@@ -1319,6 +1604,7 @@ function hud(){
 function tick(){ const c = document.getElementById("clock"); if (c) c.textContent = new Date().toLocaleString(undefined, {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
 setInterval(tick, 1000);
 window.addEventListener("hashchange", () => {
+  closeMenu();
   document.documentElement.dataset.dir = ORDER.indexOf(route()) < ORDER.indexOf(lastRoute) ? "back" : "fwd";
   const run = () => { render(); window.scrollTo(0,0); };
   if (document.startViewTransition && !reduceMotion.matches) quiet(document.startViewTransition(run)); else run();
@@ -1330,6 +1616,7 @@ view.addEventListener("change", e => {
   if (el.dataset.c){ const item = S[el.dataset.c].find(x => x.id === el.dataset.id); if (!item) return;
     item[el.dataset.f] = el.type === "number" ? num(el.value) : (el.dataset.f === "symbol" ? el.value.trim().toUpperCase() : el.value); }
   else if (el.dataset.root){ S[el.dataset.root] = num(el.value); }
+  else if (el.dataset.ht){ S.hustle.target = Math.max(0, num(el.value)); }
   else if (el.dataset.set){ S.settings[el.dataset.set] = el.type === "number" ? num(el.value) : el.value.trim();
     if (el.dataset.set === "currency") fxRate().then(render); }
   else return;
@@ -1366,6 +1653,10 @@ view.addEventListener("click", async e => {
   if (a === "addDebt") add("debts", {name:"New debt", balance:0, apr:0, minPay:0});
   if (a === "addGoal") add("goals", {name:"New goal", target:1000, deadline:new Date(Date.now()+365*86400000).toISOString().slice(0,10), contributions:[]});
   if (a === "addHolding") add("holdings", {symbol:"", shares:0});
+  if (a === "addAsset") add("assets", {name:"New asset", type:"Other", cost:0, value:0, monthly:0});
+  if (a === "hMonth"){ const v = +b.dataset.v, [y, m] = hMonth.split("-").map(Number);
+    hMonth = v ? ymd(new Date(y, m - 1 + v, 1)).slice(0, 7) : todayISO().slice(0, 7);
+    hSlide = v > 0 ? "slide-next" : v < 0 ? "slide-prev" : "slide-fade"; render(); }
   if (a === "addLookup"){ add("holdings", {symbol:lookup.sym, shares:1}); }
   if (a === "strategy"){ S.strategy = b.dataset.v; save(); render(); }
   if (a === "useLeft"){ S.settings.invMonthly = Math.round(totals().left); save(); render(); }
