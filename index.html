@@ -381,7 +381,7 @@ body{transition:background-color .4s}
 
 /* ===== Layout without a sidebar: brand on top, sections in a bottom-left menu ===== */
 .app{grid-template-columns:minmax(0,1fr)!important}
-main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!important;padding-top:max(20px, env(safe-area-inset-top, 0px))}
+main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!important;padding-top:calc(env(safe-area-inset-top, 0px) + 32px)!important}
 .topline{max-width:1080px;margin:0 auto 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .topline .brand{text-decoration:none;color:var(--ink)}
 .ro-link{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line-hi);padding:4px 0 4px 12px;text-decoration:none;color:inherit;border-radius:0 3px 3px 0}
@@ -474,6 +474,56 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 }
 @keyframes fadeIn{from{opacity:0}}
 @keyframes glassIn{from{opacity:0;transform:translateY(24px) scale(.94)}}
+
+/* Overview / detail switch at the top of Budget, Debt, Hustle, Goals and Assets */
+.subnav{align-self:flex-start}
+
+/* Hustle quick button: × above the menu button; tap it and + and − slide out beside it */
+.quick{position:relative;height:52px;width:52px}
+.q-main,.q-opt{position:absolute;left:0;top:0;width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.2);cursor:pointer;display:grid;place-items:center;color:var(--ink);font:600 1.6rem/1 var(--body)}
+.q-main{z-index:2;background:linear-gradient(140deg,rgba(255,255,255,.14),rgba(255,255,255,.03) 50%),var(--sheet-bg);box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:transform .45s cubic-bezier(.2,.9,.25,1.2),border-color .3s}
+.q-x{position:relative;width:20px;height:20px}
+.q-x::before,.q-x::after{content:"";position:absolute;left:0;right:0;top:9px;height:2px;border-radius:2px;background:var(--accent)}
+.q-x::before{transform:rotate(45deg)} .q-x::after{transform:rotate(-45deg)}
+.quick.open .q-main{transform:rotate(90deg);border-color:var(--accent)}
+.q-opt{z-index:1;opacity:0;transform:translateX(0) scale(.3);pointer-events:none;transition:transform .45s cubic-bezier(.2,.9,.25,1.25),opacity .25s ease}
+.q-add{background:linear-gradient(140deg,rgba(255,255,255,.18),rgba(255,255,255,0) 60%),color-mix(in srgb,var(--good) 70%,#000);color:#04140d}
+.q-sub{background:linear-gradient(140deg,rgba(255,255,255,.18),rgba(255,255,255,0) 60%),color-mix(in srgb,var(--bad) 70%,#000);color:#1a0406}
+.quick.open .q-opt{opacity:1;pointer-events:auto}
+.quick.open .q-add{transform:translateX(62px) scale(1)}
+.quick.open .q-sub{transform:translateX(124px) scale(1);transition-delay:.05s}
+.q-opt:active,.q-main:active{scale:.92}
+
+/* Number pad that slides up over the page */
+.pad{position:fixed;inset:0;z-index:70;display:grid;align-items:end;justify-items:center}
+.pad-back{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.pad-card{position:relative;width:min(440px,100%);border-radius:30px 30px 0 0;padding:18px 18px max(18px, env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;gap:12px;color:var(--ink);outline:none}
+@media (min-width:600px){ .pad{align-items:center} .pad-card{border-radius:30px;padding-bottom:18px} }
+.pad-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pad-mode button{padding:8px 14px}
+.pad-mode button[data-pmode="add"][aria-pressed="true"]{background:color-mix(in srgb,var(--good) 30%,transparent);box-shadow:inset 0 -2px 0 var(--good)}
+.pad-mode button[data-pmode="sub"][aria-pressed="true"]{background:color-mix(in srgb,var(--bad) 30%,transparent);box-shadow:inset 0 -2px 0 var(--bad)}
+.pad-title{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:center}
+.pad-amt{font:600 2.8rem/1.1 var(--mono);text-align:center;letter-spacing:-.02em;min-height:3.1rem;overflow-wrap:anywhere}
+.pad.sub .pad-amt{color:var(--bad)} .pad.add .pad-amt{color:var(--good)}
+.pad-sub{text-align:center;font-size:.88rem;color:var(--muted);min-height:1.3em}
+.pad-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad-keys button{height:56px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:var(--ink);font:500 1.45rem var(--mono);cursor:pointer;transition:background .15s}
+.pad-keys button:active{background:rgba(255,255,255,.18)}
+.pad-enter{height:54px;justify-content:center;border-radius:16px!important;clip-path:none!important;font-size:1rem!important}
+@media (prefers-reduced-motion: no-preference){
+  .pad:not([hidden]) .pad-back{animation:fadeIn .25s ease both}
+  .pad:not([hidden]) .pad-card{animation:padUp .42s cubic-bezier(.2,.9,.25,1.04) both}
+}
+@keyframes padUp{from{transform:translateY(100%)}}
+
+/* Confirmation message */
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top, 0px) + 14px);z-index:80;transform:translate(-50%,-20px);opacity:0;pointer-events:none;
+  max-width:calc(100vw - 32px);padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:var(--sheet-bg);color:var(--ink);font-size:.9rem;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .35s cubic-bezier(.2,.9,.25,1.1),opacity .3s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.sc-url{display:block;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--sunk);border:1px solid var(--line);font:12px/1.5 var(--mono);color:var(--accent);word-break:break-all;user-select:all}
+.sc-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.9rem;color:var(--muted)}
+.sc-steps b{color:var(--ink)}
 
 /* Hustle overview */
 .seg.seg-row{flex-direction:row;width:auto;align-self:end}
@@ -596,17 +646,42 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
       <a href="#overview" data-label="Overview"><span class="ic" aria-hidden="true">◉</span>Overview</a>
       <a href="#budget" data-label="Budget"><span class="ic" aria-hidden="true">▤</span>Budget</a>
       <a href="#debt" data-label="Debt payoff"><span class="ic" aria-hidden="true">↘</span>Debt payoff</a>
+      <a href="#hustle" data-label="Hustle"><span class="ic" aria-hidden="true">✦</span>Hustle</a>
       <a href="#goals" data-label="Goals"><span class="ic" aria-hidden="true">◎</span>Goals</a>
       <a href="#assets" data-label="Assets"><span class="ic" aria-hidden="true">◆</span>Assets</a>
       <a href="#invest" data-label="Invest"><span class="ic" aria-hidden="true">▲</span>Invest &amp; dividends</a>
-      <a href="#hustle" data-label="Hustle"><span class="ic" aria-hidden="true">✦</span>Hustle</a>
       <a href="#status" data-label="Status"><span class="ic" aria-hidden="true">◍</span>Status</a>
       <a href="#setup" data-label="Setup"><span class="ic" aria-hidden="true">⚙</span>Setup</a>
     </nav>
     <div class="foot">Market data: Alpha Vantage. Exchange rates: Frankfurter. Both found via the public-apis list.</div>
   </div>
+  <div class="quick" id="quick" hidden>
+    <button class="q-main" id="qMain" aria-expanded="false" aria-label="Add to or take away from today's hustle"><span class="q-x" aria-hidden="true"></span></button>
+    <button class="q-opt q-add" data-q="add" aria-label="Add to today" tabindex="-1">+</button>
+    <button class="q-opt q-sub" data-q="sub" aria-label="Take away from today" tabindex="-1">−</button>
+  </div>
   <button class="dock-btn glassy" id="menuBtn" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span class="burger" aria-hidden="true"></span><span id="dockLabel" aria-hidden="true">Overview</span></button>
 </div>
+<div class="pad" id="pad" hidden>
+  <div class="pad-back" data-pclose></div>
+  <div class="pad-card glassy" role="dialog" aria-modal="true" aria-labelledby="padTitle" tabindex="-1">
+    <div class="pad-head">
+      <div class="seg seg-row pad-mode" role="group" aria-label="Add or take away"><button data-pmode="add" aria-pressed="true">+ Add</button><button data-pmode="sub" aria-pressed="false">− Take away</button></div>
+      <button class="g-btn" data-pclose aria-label="Cancel">×</button>
+    </div>
+    <div class="pad-title" id="padTitle">Add to today</div>
+    <div class="pad-amt" id="padAmt" aria-live="polite">0</div>
+    <div class="pad-sub" id="padSub"></div>
+    <div class="pad-keys">
+      <button data-pk="1">1</button><button data-pk="2">2</button><button data-pk="3">3</button>
+      <button data-pk="4">4</button><button data-pk="5">5</button><button data-pk="6">6</button>
+      <button data-pk="7">7</button><button data-pk="8">8</button><button data-pk="9">9</button>
+      <button data-pk=".">.</button><button data-pk="0">0</button><button data-pk="back" aria-label="Delete">⌫</button>
+    </div>
+    <button class="btn primary pad-enter" data-pk="enter">Enter</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="glass" id="glass" hidden>
   <div class="glass-back" data-gclose></div>
   <div class="glass-card glassy" role="dialog" aria-modal="true" aria-labelledby="g-title" tabindex="-1" id="glassCard"></div>
@@ -766,10 +841,25 @@ async function pull(){
         render(); if (openKey) openDetail(openKey);
       } else await push();
     } else sync = "offline";
+    if (sync === "linked") await applyQueue();
   } catch(e){ sync = "offline"; }
   hud();
 }
+/* Amounts an iPhone Shortcut sent to the PC (api/hustle) wait in a queue until an open copy of the app applies them. */
+async function applyQueue(){
+  const h = syncKey ? { "X-Ledger-Key":syncKey } : {};
+  const r = await fetch("api/queue", { cache:"no-store", headers:h }); if (!r.ok) return;
+  const q = await r.json(); if (!Array.isArray(q) || !q.length) return;
+  normalize(); const done = S.hustle.applied = Array.isArray(S.hustle.applied) ? S.hustle.applied : [];
+  let last = null;
+  for (const it of q){ if (!it || done.includes(it.id) || !/^\d{4}-\d{2}-\d{2}$/.test(it.date || "")) continue;
+    const nv = hustleAdjust(num(it.delta), it.date); done.push(it.id); last = { delta:num(it.delta), nv, today: it.date === todayISO() }; }
+  S.hustle.applied = done.slice(-200);
+  await fetch("api/queue", { method:"POST", cache:"no-store", headers:Object.assign({ "Content-Type":"application/json" }, h), body:JSON.stringify(q.map(i => i && i.id)) });
+  if (last){ save(); render(); if (last.today) toast(adjustMsg(last.delta, last.nv)); }
+}
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pull(); });
+setInterval(() => { if (SERVER && document.visibilityState === "visible") pull(); }, 15000);
 let C = (()=>{ try { return JSON.parse(localStorage.getItem(CKEY)) || {}; } catch(e){ return {}; } })();
 function saveCache(){ try { localStorage.setItem(CKEY, JSON.stringify(C)); } catch(e){} }
 
@@ -1262,6 +1352,100 @@ function viewAssets(){
   </div>` : ""}`;
 }
 
+/* ---------- Overview pages for Budget, Debt, Goals and Assets (same layout as the main Overview) ---------- */
+const SUB = { budget:"Categories", debt:"Payoff plan", hustle:"Calendar", goals:"My goals", assets:"My assets" };
+const subTab = { budget:"overview", debt:"overview", hustle:"overview", goals:"overview", assets:"overview" };
+const subNav = tab => `<div class="seg seg-row subnav" role="group" aria-label="View"><button data-act="sub" data-tab="${tab}" data-v="overview" aria-pressed="${subTab[tab] === "overview"}">Overview</button><button data-act="sub" data-tab="${tab}" data-v="detail" aria-pressed="${subTab[tab] === "detail"}">${SUB[tab]}</button></div>`;
+const withSub = (tab, ov, det) => () => subNav(tab) + (subTab[tab] === "overview" ? ov() : det());
+const pageHead = (eb, h, p) => `<div class="page-head"><div><div class="eyebrow">${eb}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+const asPanels = body => body.split('<section class="sheet-sec">').join('<section class="panel sheet-sec">');
+const toDetail = (tab, label) => `<button class="btn primary" data-act="sub" data-tab="${tab}" data-v="detail">${label}</button>`;
+function heroBlock(o){
+  return `<div class="panel hero">
+    <div class="gauge" style="--p:${Math.max(0, Math.min(100, o.p)).toFixed(1)}" role="img" aria-label="${esc(o.plabel)} ${Math.round(o.p)} percent"><div class="in"><b>${Math.round(o.p)}%</b><span>${o.plabel}</span></div></div>
+    <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+      <div><div class="eyebrow">${o.eyebrow}</div><div class="net ${o.cls || ""}">${o.big}</div><div class="small muted">${o.sub}</div></div>
+      <div class="readout">${o.readouts.map(([l, v, c]) => `<div><span>${l}</span><b class="${c || ""}">${v}</b></div>`).join("")}</div>
+    </div></div>`;
+}
+const tilesBlock = tiles => `<div class="grid g4">${tiles.map(([e, v, s, c]) => `<div class="panel stat"><span class="eyebrow">${e}</span><span class="v ${c || ""}">${v}</span><span class="s">${s}</span></div>`).join("")}</div>`;
+
+function budgetOverview(){
+  const t = totals(), inc = t.income;
+  const head = pageHead("Budget", "Your month at a glance", "Where your income goes, how much of the plan you've used, and where to trim.");
+  if (!S.income.length && !S.expenses.length) return head + `<div class="panel"><p class="empty">Add your income and spending categories to see your month.</p><div>${toDetail("budget", "Set up my budget")}</div></div>`;
+  const used = t.budgeted ? t.spent / t.budgeted * 100 : 0, saveCats = sum(S.expenses.filter(e => e.kind === "save"), e => e.budget);
+  const rate = inc ? (saveCats + Math.max(0, t.left)) / inc * 100 : 0, over = S.expenses.filter(e => num(e.spent) > num(e.budget)).length;
+  return head + heroBlock({ p:used, plabel:"Budget used", eyebrow:"Left over this month", big:money(t.left), cls:t.left >= 0 ? "pos" : "neg",
+      sub:`after ${money(t.budgeted)} budgeted and ${money(t.debtPay)} to debt`,
+      readouts:[["Income", money(inc)], ["Spent so far", money(t.spent)], ["Saving rate", pct(rate), rate >= 20 ? "pos" : "goldc"], ["Over budget", over ? over + (over === 1 ? " category" : " categories") : "None", over ? "neg" : "pos"]] })
+    + tilesBlock([["Income / month", money(inc), S.income.length + " source" + (S.income.length === 1 ? "" : "s")],
+      ["Planned spending", money(t.budgeted), inc ? pct(t.budgeted / inc * 100) + " of income" : ""],
+      ["Spent so far", money(t.spent), pct(used) + " of the plan", used > 100 ? "neg" : ""],
+      ["Debt payments", money(t.debtPay), inc ? pct(t.debtPay / inc * 100) + " of income" : "", "goldc"]])
+    + asPanels(detailLeft().body);
+}
+function debtOverview(){
+  const head = pageHead("Debt", "Your road to debt-free", "How much you owe, how much of each payment actually cuts it, and the fastest way out.");
+  if (!S.debts.length) return head + `<div class="panel"><p class="empty">No debts recorded. If you have any, add them to see your payoff date.</p><div>${toDetail("debt", "Add my debts")}</div></div>`;
+  const t = totals(), sim = simulate(S.debts, S.extraPayment, S.strategy), base = simulate(S.debts, 0, S.strategy);
+  const mInt = sum(S.debts, d => num(d.balance) * num(d.apr) / 1200), share = t.debtPay > 0 ? Math.max(0, t.debtPay - mInt) / t.debtPay * 100 : 0;
+  const top = S.debts.filter(d => num(d.balance) > 0).sort((a, b) => num(b.apr) - num(a.apr))[0];
+  return head + heroBlock({ p:share, plabel:"Cuts debt", eyebrow:"Total debt", big:money(t.debtTotal), cls:"neg",
+      sub:`${sim.never ? "Your payments don't cover the interest yet" : "Debt-free " + monthLabel(addMonths(sim.months))} · ${pct(share)} of each payment reduces what you owe`,
+      readouts:[["Debt-free", sim.never ? "Not on track" : monthLabel(addMonths(sim.months)), sim.never ? "neg" : "pos"], ["Paying / month", money(t.debtPay)], ["Interest / month", money(mInt), "neg"], ["Saved vs minimums", !sim.never && !base.never ? money(Math.max(0, base.totalInterest - sim.totalInterest)) : "—", "pos"]] })
+    + tilesBlock([["Debts", String(S.debts.filter(d => num(d.balance) > 0).length), "Paying " + (S.strategy === "snowball" ? "smallest first" : "highest rate first")],
+      ["Highest rate", top ? pct(num(top.apr)) : "—", top ? esc(top.name) : "", "neg"],
+      ["Interest still to pay", sim.never ? "—" : money(sim.totalInterest), "on your current plan"],
+      ["Months to go", sim.never ? "—" : String(sim.months), sim.never ? "" : "about " + (sim.months / 12).toFixed(1) + " years", "goldc"]])
+    + asPanels(detailDebt().body);
+}
+function goalsOverview(){
+  const head = pageHead("Goals", "Your goals at a glance", "How close each goal is, what it needs each month, and whether you're on pace.");
+  if (!S.goals.length) return head + `<div class="panel"><p class="empty">No goals yet. Set a target and log contributions as you save.</p><div>${toDetail("goals", "Create a goal")}</div></div>`;
+  const st = S.goals.map(g => ({ g, s:goalStats(g) })), saved = sum(st, x => x.s.saved), target = sum(st, x => x.s.target);
+  const open = st.filter(x => !x.s.done), need = sum(open.filter(x => x.s.perMonth !== null), x => x.s.perMonth), avg = sum(st, x => x.s.avg);
+  const onPace = open.filter(x => x.s.perMonth === null || x.s.avg >= x.s.perMonth).length;
+  const next = open.filter(x => x.g.deadline).sort((a, b) => a.g.deadline.localeCompare(b.g.deadline))[0];
+  return head + heroBlock({ p:target ? saved / target * 100 : 0, plabel:"Funded", eyebrow:"Saved toward goals", big:money(saved), cls:"pos",
+      sub:`of ${money(target)} · ${money(Math.max(0, target - saved))} to go`,
+      readouts:[["Needed / month", money(need)], ["You save / month", money(avg), avg >= need ? "pos" : "neg"], ["Goals reached", (st.length - open.length) + " of " + st.length], ["Next deadline", next ? fmtDate(next.g.deadline, { month:"short", year:"numeric" }) : "—"]] })
+    + tilesBlock([["Saved", money(saved), pct(target ? saved / target * 100 : 0) + " of all targets", "pos"],
+      ["Still to save", money(Math.max(0, target - saved)), open.length + " goal" + (open.length === 1 ? "" : "s") + " open"],
+      ["On pace", onPace + " of " + open.length, open.length ? (onPace === open.length ? "Every open goal is on time" : "Some need a bigger monthly amount") : "All reached", onPace === open.length ? "pos" : "goldc"],
+      ["Gap / month", money(Math.max(0, need - avg)), need > avg ? "more needed to stay on time" : "you're saving enough", need > avg ? "neg" : "pos"]])
+    + asPanels(detailGoals().body);
+}
+function assetsOverview(){
+  const head = pageHead("Assets", "What you own at a glance", "What your assets are worth, what they pay you, and how to make them work harder.");
+  if (!S.assets.length) return head + `<div class="panel"><p class="empty">Nothing listed yet. Add what you own to see its value and income.</p><div>${toDetail("assets", "Add an asset")}</div></div>`;
+  const A = assetTotals(), gain = A.value - A.cost, yc = A.cost ? A.monthly * 12 / A.cost * 100 : 0;
+  const earning = S.assets.filter(a => num(a.monthly) > 0), earnVal = sum(earning, a => a.value);
+  const yieldOf = a => num(a.cost) ? num(a.monthly) * 12 / num(a.cost) * 100 : 0, best = earning.slice().sort((a, b) => yieldOf(b) - yieldOf(a))[0];
+  const idle = S.assets.filter(a => !(num(a.monthly) > 0)), losing = S.assets.filter(a => num(a.value) < num(a.cost)).sort((a, b) => (num(a.value) - num(a.cost)) - (num(b.value) - num(b.cost)));
+  const colors = ["var(--accent)","var(--good)","var(--warn)","var(--gold)","var(--bad)","var(--muted)","var(--ink)"];
+  const byType = ASSET_TYPES.map((ty, i) => [ty, sum(S.assets.filter(a => (a.type || "Other") === ty), a => a.value), colors[i]]).filter(x => x[1] > 0);
+  const stack = `<div class="stack">${byType.map(([n, v, c]) => `<i style="flex:${v};background:${c}" title="${n}"></i>`).join("")}</div>
+    <div class="row small">${byType.map(([n, v, c]) => `<span class="lg"><i style="background:${c}"></i>${n} <b class="num">${money(v)}</b> <span class="muted">${pct(A.value ? v / A.value * 100 : 0)}</span></span>`).join("")}</div>`;
+  const rows = S.assets.slice().sort((a, b) => num(b.value) - num(a.value)).map(a => ({ label:a.name, value:num(a.value), mark:num(a.cost), text:money(num(a.value)) + " · paid " + money(num(a.cost)), cls:num(a.value) < num(a.cost) ? "over" : "" }));
+  const L = [];
+  if (idle.length) L.push({ t:`${idle.length === 1 ? esc(idle[0].name) + " doesn't" : idle.length + " assets don't"} earn anything.`, b:`${idle.map(a => esc(a.name)).slice(0, 3).join(", ")}${idle.length > 3 ? " and more" : ""}. Could you rent it out, lend it for a fee, or sell it and put the money into something that pays?` });
+  if (losing[0]) L.push({ t:`${esc(losing[0].name)} is worth ${money(num(losing[0].cost) - num(losing[0].value))} less than you paid.`, b:"Vehicles and equipment lose value every year. Use them to earn while they're worth something, and count the drop when you decide whether to keep them." });
+  if (best) L.push({ t:`${esc(best.name)} is your best earner at ${pct(yieldOf(best))} a year.`, b:"When you buy your next asset, compare its expected yearly income against this before you commit." });
+  if (A.monthly > 0) L.push({ t:`Count the ${money(A.monthly)} a month in your budget.`, b:"Asset income isn't added automatically. When it lands in your account, add it under Budget → Income so it can work toward debt and goals." });
+  L.push({ t:"Update values every few months.", b:"Prices change. Keeping “worth now” current keeps your net position honest." });
+  return head + heroBlock({ p:A.value ? earnVal / A.value * 100 : 0, plabel:"Earning", eyebrow:"Worth today", big:money(A.value), cls:gain >= 0 ? "pos" : "neg",
+      sub:`${gain >= 0 ? "+" : ""}${money(gain)} vs the ${money(A.cost)} you paid`,
+      readouts:[["Earns / month", money(A.monthly), "pos"], ["Yearly return", pct(yc), "goldc"], ["Gain / loss", (gain >= 0 ? "+" : "") + money(gain), gain >= 0 ? "pos" : "neg"], ["Pays back in", A.monthly > 0 ? span(A.cost / A.monthly) : "—"]] })
+    + tilesBlock([["Worth today", money(A.value), S.assets.length + " asset" + (S.assets.length === 1 ? "" : "s")],
+      ["You paid", money(A.cost), (gain >= 0 ? "+" : "") + pct(A.cost ? gain / A.cost * 100 : 0) + " since", gain >= 0 ? "" : ""],
+      ["Earns / year", money(A.monthly * 12), earning.length + " of " + S.assets.length + " pay you", "pos"],
+      ["Best earner", best ? esc(best.name) : "—", best ? pct(yieldOf(best)) + " a year on cost" : "No income yet", "goldc"]])
+    + `<section class="panel sheet-sec"><div class="eyebrow">What you own, by type</div>${stack}</section>`
+    + `<section class="panel sheet-sec"><div class="eyebrow">Worth now vs what you paid · line marks what you paid</div>${hbars(rows)}</section>`
+    + `<section class="panel sheet-sec"><div class="eyebrow">Ways to improve</div>${tips(L)}</section>`;
+}
+
 /* ---------- Hustle: a daily target, a calendar that turns green or red, and notes for each day ---------- */
 let hMonth = todayISO().slice(0, 7), hSlide = "";
 const cmoney = v => { try { return new Intl.NumberFormat(undefined, { style:"currency", currency:S.settings.currency, notation:"compact", maximumFractionDigits:1 }).format(v); } catch(e){ return String(Math.round(v)); } };
@@ -1279,15 +1463,15 @@ function hustleStreak(){
   while (hustleStatus(ymd(d)) === "hit"){ n++; d.setDate(d.getDate() - 1); }
   return n;
 }
-let hTab = "overview";
 const isoAdd = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return ymd(d); };
 const dayAmt = iso => hasAmt(S.hustle.days[iso]) ? num(S.hustle.days[iso].amount) : 0;
 function viewHustle(){
   return `
-  <div class="page-head"><div><div class="eyebrow">Hustle</div><h2>${hTab === "overview" ? "Your hustle at a glance" : "Hit your daily number"}</h2>
-  <p>${hTab === "overview" ? "How your side income is tracking against your daily target, where you're strong, and where to push." : "Set a daily target, then tap a day to log what you made and jot down notes. Days turn green when you hit the target and red when you don't."}</p></div>
-  <div class="seg seg-row" role="group" aria-label="Hustle view"><button data-act="hTab" data-v="overview" aria-pressed="${hTab === "overview"}">Overview</button><button data-act="hTab" data-v="calendar" aria-pressed="${hTab === "calendar"}">Calendar</button></div></div>
-  ${hTab === "overview" ? hustleOverview() : hustleCalendar()}`;
+  ${subNav("hustle")}
+  <div class="page-head"><div><div class="eyebrow">Hustle</div><h2>${subTab.hustle === "overview" ? "Your hustle at a glance" : "Hit your daily number"}</h2>
+  <p>${subTab.hustle === "overview" ? "How your side income is tracking against your daily target, where you're strong, and where to push. Tap × at the bottom left to add or take away from today." : "Set a daily target, then tap a day to log what you made and jot down notes. Days turn green when you hit the target and red when you don't."}</p></div></div>
+  ${subTab.hustle === "overview" ? hustleOverview() : hustleCalendar()}
+  ${shortcutPanel()}`;
 }
 function bestStreak(){
   const ks = Object.keys(S.hustle.days).filter(k => hasAmt(S.hustle.days[k])).sort(), today = todayISO();
@@ -1359,11 +1543,11 @@ function hustleOverview(){
   </div>
   <div class="grid g4">
     <div class="panel stat tap" data-day="${today}" role="button" tabindex="0"><span class="eyebrow">Today</span><span class="v ${todayLogged ? (t && todayAmt < t ? "neg" : "pos") : ""}">${todayLogged ? money(todayAmt) : "Not logged"}</span><span class="s">${t ? (todayAmt >= t ? "Target hit" : money(t - todayAmt) + " to go") : "Tap to log it"}</span></div>
-    <div class="panel stat tap" data-act="hTab" data-v="calendar" role="button" tabindex="0"><span class="eyebrow">This week</span><span class="v">${money(weekEarned)}</span><span class="s">${t ? pct(weekEarned / (t * 7) * 100) + " of " + money(t * 7) : week.length + " day" + (week.length === 1 ? "" : "s") + " so far"}</span></div>
-    <div class="panel stat tap" data-act="hTab" data-v="calendar" role="button" tabindex="0"><span class="eyebrow">Days hit · 30 days</span><span class="v">${hit30}<span class="muted" style="font-size:1rem"> / ${hit30 + miss30}</span></span><span class="s">Best streak ${best} ${best === 1 ? "day" : "days"}</span></div>
+    <div class="panel stat tap" data-act="sub" data-tab="hustle" data-v="detail" role="button" tabindex="0"><span class="eyebrow">This week</span><span class="v">${money(weekEarned)}</span><span class="s">${t ? pct(weekEarned / (t * 7) * 100) + " of " + money(t * 7) : week.length + " day" + (week.length === 1 ? "" : "s") + " so far"}</span></div>
+    <div class="panel stat tap" data-act="sub" data-tab="hustle" data-v="detail" role="button" tabindex="0"><span class="eyebrow">Days hit · 30 days</span><span class="v">${hit30}<span class="muted" style="font-size:1rem"> / ${hit30 + miss30}</span></span><span class="s">Best streak ${best} ${best === 1 ? "day" : "days"}</span></div>
     <div class="panel stat"><span class="eyebrow">All time</span><span class="v goldc">${money(allTime)}</span><span class="s">over ${logged.length} logged day${logged.length === 1 ? "" : "s"}</span></div>
   </div>
-  <div class="panel"><div class="panel-head"><h3>Last 30 days</h3><button class="btn" data-act="hTab" data-v="calendar">Open calendar</button></div>
+  <div class="panel"><div class="panel-head"><h3>Last 30 days</h3><button class="btn" data-act="sub" data-tab="hustle" data-v="detail">Open calendar</button></div>
     ${hustleBars(last30, t)}
     <div class="row small muted" style="gap:16px"><span class="lg"><i style="background:var(--good)"></i>Target hit</span><span class="lg"><i style="background:var(--bad)"></i>Missed</span>${t ? `<span class="lg"><i style="background:var(--accent);height:2px"></i>Daily target</span>` : ""}</div>
   </div>
@@ -1469,6 +1653,95 @@ document.getElementById("glass").addEventListener("click", e => {
   if (e.target.closest("[data-gclear]")){ delete S.hustle.days[gDay]; save(); openDay(gDay); return; }
   const n = e.target.closest("[data-gday]"); if (n){ hMonth = n.dataset.gday.slice(0, 7); openDay(n.dataset.gday); }
 });
+
+/* ---------- Quick add: the × button, the number pad, toasts, Shortcut links ---------- */
+let padMode = "add", padStr = "", toastTimer;
+function hustleAdjust(delta, iso){
+  iso = iso || todayISO(); normalize();
+  const d = S.hustle.days[iso] || {}, nv = Math.max(0, Math.round((dayAmt(iso) + delta) * 100) / 100);
+  S.hustle.days[iso] = { amount:nv, note:d.note || "" };
+  return nv;
+}
+function adjustMsg(delta, nv){ const t = num(S.hustle.target);
+  return `${delta >= 0 ? "+" : "−"}${money(Math.abs(delta))} · Today ${money(nv)}` + (t ? (nv >= t ? " · target hit ✓" : ` · ${money(t - nv)} to go`) : ""); }
+function toast(msg){ const el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 3200); }
+function setQuick(open){ const q = document.getElementById("quick"); if (q.classList.contains("open") === open) return;
+  q.classList.toggle("open", open); document.getElementById("qMain").setAttribute("aria-expanded", String(open));
+  q.querySelectorAll(".q-opt").forEach(b => b.tabIndex = open ? 0 : -1); }
+function padShow(){
+  const p = document.getElementById("pad"); p.className = "pad " + padMode;
+  p.querySelectorAll("[data-pmode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pmode === padMode)));
+  document.getElementById("padTitle").textContent = padMode === "add" ? "Add to today" : "Take away from today";
+  document.getElementById("padAmt").textContent = (padMode === "add" ? "+" : "−") + (padStr || "0");
+  const cur = dayAmt(todayISO()), v = num(padStr), nv = Math.max(0, cur + (padMode === "add" ? v : -v)), t = num(S.hustle.target);
+  document.getElementById("padSub").textContent = `Today ${money(cur)} → ${money(nv)}` + (t ? (nv >= t ? " · target hit ✓" : ` · ${money(t - nv)} to go`) : "");
+}
+function openPad(mode){
+  padMode = mode === "sub" ? "sub" : "add"; padStr = "";
+  const p = document.getElementById("pad");
+  if (p.hidden){ closeMenu(); p.hidden = false; document.body.style.overflow = "hidden"; }
+  padShow(); p.querySelector(".pad-card").focus({ preventScroll:true });
+}
+function closePad(){ const p = document.getElementById("pad"); if (p.hidden) return;
+  p.hidden = true; document.body.style.overflow = ""; setQuick(false); document.getElementById("qMain").focus({ preventScroll:true }); }
+function padKey(k){
+  if (k === "enter"){ const v = num(padStr);
+    if (v > 0){ const delta = padMode === "add" ? v : -v, nv = hustleAdjust(delta); save(); render(); toast(adjustMsg(delta, nv)); }
+    closePad(); return; }
+  if (k === "back") padStr = padStr.slice(0, -1);
+  else if (k === "."){ if (!padStr.includes(".")) padStr = (padStr || "0") + "."; }
+  else if (/^\d$/.test(k)){ const [i, f] = padStr.split("."); if (f !== undefined ? f.length < 2 : (i || "").length < 9) padStr = padStr === "0" ? k : padStr + k; }
+  padShow();
+}
+document.getElementById("quick").addEventListener("click", e => {
+  if (e.target.closest("#qMain")) return setQuick(!document.getElementById("quick").classList.contains("open"));
+  const o = e.target.closest("[data-q]"); if (o) openPad(o.dataset.q);
+});
+document.getElementById("pad").addEventListener("click", e => {
+  if (e.target.closest("[data-pclose]")) return closePad();
+  const m = e.target.closest("[data-pmode]"); if (m){ padMode = m.dataset.pmode; padShow(); return; }
+  const k = e.target.closest("[data-pk]"); if (k) padKey(k.dataset.pk);
+});
+/* Links an iPhone Shortcut can open: #hustle/add/50 adds 50 to today, #hustle/sub/20 takes 20 away,
+   #hustle/add on its own opens the number pad. */
+function deepLink(){
+  if (MODE === "online") return;
+  const m = location.hash.match(/^#hustle\/(add|sub)(?:\/(\d+(?:\.\d+)?))?\/?$/); if (!m) return;
+  history.replaceState(null, "", location.pathname + location.search + "#hustle");
+  const v = num(m[2]);
+  if (v > 0){ const delta = m[1] === "add" ? v : -v, nv = hustleAdjust(delta); save(); setTimeout(() => toast(adjustMsg(delta, nv)), 500); }
+  else setTimeout(() => openPad(m[1]), 400);
+}
+function scSteps(url, last, note){
+  return `<ol class="sc-steps">
+    <li>Open the <b>Shortcuts</b> app, tap <b>+</b> and name it <b>Hustle +</b>.</li>
+    <li>Add <b>Ask for Input</b>. Set the input type to <b>Number</b> and the prompt to “How much?”.</li>
+    <li>Add <b>${last === "show" ? "Get Contents of URL" : "URL"}</b> and paste this link, then tap at its end and insert the <b>Provided Input</b> variable:<code class="sc-url">${esc(url)}</code></li>
+    <li>Add <b>${last === "show" ? "Show Result" : "Open URLs"}</b>.</li>
+    <li>For <b>Hustle −</b>, duplicate it and change <b>add</b> to <b>sub</b> in the link.</li>
+    <li>Run it from the Home Screen (Share → Add to Home Screen), the Action button, Back Tap (Settings → Accessibility → Touch) or Siri.</li>
+  </ol>${note ? `<p class="small muted" style="margin:0">${note}</p>` : ""}`;
+}
+const scLanHtml = (origin, k) => `<div class="sheet-sec"><div class="eyebrow">At home · adds without opening the app</div>`
+  + scSteps(`${origin}/api/hustle?k=${encodeURIComponent(k)}&op=add&amount=`, "show", "Works on your home Wi-Fi while the Freedom Ledger window is open on your PC. The Shortcut shows today's new total. This link holds your private access key, so keep the Shortcut to yourself.") + `</div>`;
+function shortcutPanel(){
+  if (MODE === "online") return `<div class="panel"><h3>iPhone Shortcut</h3><p class="small muted" style="margin:0">Shortcuts can't reach this online version. Use the phone app or the PC version to add to today with one tap.</p></div>`;
+  const local = MODE === "local" && SERVER, onPC = /^(localhost|127\.|\[::1\])/.test(location.hostname);
+  const openUrl = location.origin + location.pathname + "#hustle/add/";
+  return `<div class="panel"><div class="panel-head"><h3>iPhone Shortcut</h3><span class="chip gold">Tally counter</span></div>
+    <p class="small muted" style="margin:0">Add to or take away from today's hustle with one tap, like a tally counter.</p>
+    ${local ? (onPC ? `<div id="scLan" class="small muted">Loading your home Wi-Fi link…</div>` : scLanHtml(location.origin, syncKey)) : ""}
+    <details${local ? "" : " open"}><summary>${local ? "Or: a Shortcut that opens the app" : "Set it up"}</summary>
+      <div class="sheet-sec" style="margin-top:10px">${scSteps(openUrl, "open", "Your iPhone opens Shortcut links in Safari, and Safari keeps its own copy of your numbers, separate from the Home Screen app. Use this if you run Freedom Ledger in Safari. Leave the amount out of the link (end it at <b>/add</b>) to open the number pad instead.")}</div>
+    </details></div>`;
+}
+async function loadScLan(){
+  const box = document.getElementById("scLan"); if (!box) return;
+  try { const r = await fetch("api/info", { cache:"no-store" }); const j = await r.json(); const u = new URL(j.urls[0]);
+    box.outerHTML = scLanHtml(u.origin, u.searchParams.get("k") || ""); }
+  catch(e){ box.textContent = "Open this page on your iPhone (using the phone link from Setup) to see your Shortcut link."; }
+}
 
 function viewSettings(){
   const st = S.settings, curs = ["USD","ZAR","EUR","GBP","AUD","CAD","NZD","INR","JPY","CHF","SEK","NOK","DKK","PLN","BRL","MXN","SGD","HKD","CNY","KRW","TRY","ILS","PHP","THB","IDR","MYR","CZK","HUF","RON","ISK"];
@@ -1648,6 +1921,7 @@ document.addEventListener("click", e => {
   if (e.target.closest("[data-close]")){ closeDetail(); return; }
   if (e.target.closest("#menuBtn")){ document.getElementById("menu").hidden ? openMenu() : closeMenu(); return; }
   if (!e.target.closest("#menu") || e.target.closest("#menu a")) closeMenu();
+  if (!e.target.closest("#quick") && !e.target.closest("#pad")) setQuick(false);
   const day = e.target.closest("#view [data-day]"); if (day){ openDay(day.dataset.day); return; }
   if (e.target.closest("[data-skin-next]")){ const ks = Object.keys(SKINS); setSkin(ks[(ks.indexOf(skinKey()) + 1) % ks.length], e); return; }
   const sk = e.target.closest("[data-skin-pick]"); if (sk){ setSkin(sk.dataset.skinPick, e); return; }
@@ -1655,7 +1929,14 @@ document.addEventListener("click", e => {
   if (d && !e.target.closest("input,select,textarea,a,button")) openDetail(d.dataset.detail);
 });
 document.addEventListener("keydown", e => {
+  if (!document.getElementById("pad").hidden){
+    const k = e.key === "Enter" ? "enter" : e.key === "Backspace" ? "back" : (/^[\d.]$/.test(e.key) ? e.key : null);
+    if (e.key === "Escape"){ e.preventDefault(); return closePad(); }
+    if (k){ e.preventDefault(); padKey(k); }   // typing on a keyboard works too; Enter always confirms
+    return;
+  }
   if (e.key === "Escape"){
+    if (document.getElementById("quick").classList.contains("open")) return setQuick(false);
     if (!document.getElementById("glass").hidden) return closeDay();
     if (!document.getElementById("menu").hidden) return closeMenu(true);
     return closeDetail();
@@ -1687,14 +1968,16 @@ async function loadPhone(){
 }
 
 /* ---------- render & events ---------- */
-const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, assets:viewAssets, invest:viewInvest, hustle:viewHustle, status:viewStatus, setup:viewSettings };
+const views = { overview:viewOverview, budget:withSub("budget", budgetOverview, viewBudget), debt:withSub("debt", debtOverview, viewDebt),
+  hustle:viewHustle, goals:withSub("goals", goalsOverview, viewGoals), assets:withSub("assets", assetsOverview, viewAssets),
+  invest:viewInvest, status:viewStatus, setup:viewSettings };
 function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
 const SKINS = {
   stark:    { name:"Stark Gold",    tag:"Onyx black with gold and emerald. Pages rise in.", meta:"#050605" },
   vault:    { name:"Emerald Vault", tag:"Deep private-bank green with champagne gold. Pages settle in like a vault door.", meta:"#03140d" },
   platinum: { name:"Black Card",    tag:"Midnight with platinum, sapphire and rose gold. Pages glide sideways.", meta:"#06070c" }
 };
-const ORDER = ["overview","budget","debt","goals","assets","invest","hustle","status","setup"];
+const ORDER = ["overview","budget","debt","hustle","goals","assets","invest","status","setup"];
 const reduceMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
 let lastRoute = null, enterTimer, lastHTML = "", navTimer;
 /* A selector that finds "the same field" again after the page is redrawn. */
@@ -1771,7 +2054,9 @@ function render(){
   if (changed) flashDockLabel();
   lastHTML = html;
   hud();
+  const q = document.getElementById("quick"); if (r !== "hustle") setQuick(false); q.hidden = r !== "hustle";
   if (r === "setup") loadPhone();
+  if (r === "hustle") loadScLan();
 }
 /* Status: market data, sync and currency. Shown on the Status tab; the top bar keeps only the rate and the time. */
 function statusInfo(){
@@ -1830,7 +2115,7 @@ function tick(){ const c = document.getElementById("clock"); if (!c) return;
   if (c.textContent !== s) c.textContent = s; }
 setInterval(tick, 1000);
 window.addEventListener("hashchange", () => {
-  closeMenu();
+  closeMenu(); deepLink();
   document.documentElement.dataset.dir = ORDER.indexOf(route()) < ORDER.indexOf(lastRoute) ? "back" : "fwd";
   const v = document.getElementById("view");
   const run = () => { v.classList.remove("leave"); render(); window.scrollTo(0, 0); };
@@ -1885,7 +2170,8 @@ view.addEventListener("click", async e => {
   if (a === "addGoal") add("goals", {name:"New goal", target:1000, deadline:new Date(Date.now()+365*86400000).toISOString().slice(0,10), contributions:[]});
   if (a === "addHolding") add("holdings", {symbol:"", shares:0});
   if (a === "addAsset") add("assets", {name:"New asset", type:"Other", cost:0, value:0, monthly:0});
-  if (a === "hTab" && b.dataset.v !== hTab){ hTab = b.dataset.v; document.documentElement.dataset.dir = hTab === "calendar" ? "fwd" : "back";
+  if (a === "sub" && subTab[b.dataset.tab] && b.dataset.v !== subTab[b.dataset.tab]){ subTab[b.dataset.tab] = b.dataset.v;
+    document.documentElement.dataset.dir = b.dataset.v === "detail" ? "fwd" : "back";
     lastRoute = null; render(); window.scrollTo(0, 0); }
   if (a === "hMonth"){ const v = +b.dataset.v, [y, m] = hMonth.split("-").map(Number);
     hMonth = v ? ymd(new Date(y, m - 1 + v, 1)).slice(0, 7) : todayISO().slice(0, 7);
@@ -1916,6 +2202,7 @@ view.addEventListener("click", async e => {
 });
 
 /* first load: use cached data, fetch what's missing quietly */
+deepLink();
 render();
 /* Show the name for 3 seconds, then fold it into the logo and leave the rate and time beside it. */
 setTimeout(() => document.getElementById("topline").classList.add("collapsed"), 3000);
