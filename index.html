@@ -386,6 +386,28 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 .topline .brand{text-decoration:none;color:var(--ink)}
 .ro-link{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line-hi);padding:4px 0 4px 12px;text-decoration:none;color:inherit;border-radius:0 3px 3px 0}
 .readout .ro-link{text-align:left}
+.chip .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px}
+.chip .dot.off{background:var(--warn)}
+.menu .nav a:nth-child(9){animation-delay:.24s}
+
+/* Top bar: logo and name on load; the name then folds into the logo and the rate and time are left beside it. */
+.topline{justify-content:flex-start;gap:0;margin-bottom:22px;min-height:44px}
+.topline .brand{gap:12px;transition:gap .6s cubic-bezier(.6,0,.2,1)}
+.brand-name{max-width:320px;overflow:hidden;white-space:nowrap;transform-origin:left center;
+  transition:max-width .6s cubic-bezier(.6,0,.2,1),opacity .4s ease,transform .6s cubic-bezier(.6,0,.2,1)}
+.topinfo{display:flex;align-items:center;gap:8px;margin-left:14px;font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  opacity:0;transform:translateX(-8px);pointer-events:none;transition:opacity .45s ease .45s,transform .45s ease .45s}
+.topinfo #fxline{color:var(--ink);font-weight:600}
+.topinfo .clock{color:var(--accent)}
+.topinfo .sep{opacity:.5}
+.topline.collapsed .brand{gap:0}
+.topline.collapsed .brand-name{max-width:0;opacity:0;transform:translateX(-16px) scale(.6)}
+.topline.collapsed .topinfo{opacity:1;transform:none;pointer-events:auto}
+@media (max-width:560px){
+  .topinfo{flex-direction:column;align-items:flex-start;gap:2px;font-size:.66rem;letter-spacing:.1em;line-height:1.35}
+  .topinfo .sep{display:none}
+}
+@media (prefers-reduced-motion: reduce){ .topline .brand,.brand-name,.topinfo{transition:none} }
 .ro-link:hover{background:rgba(var(--acc-rgb),.07);border-left-color:var(--accent)}
 
 /* Frosted glass, used by the menu and the day card */
@@ -564,8 +586,8 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 <body>
 <div class="app">
   <main>
-    <div class="topline"><a class="brand" href="#overview"><span class="reactor" aria-hidden="true"></span><div><h1>Freedom Ledger</h1><small>Wealth command</small></div></a></div>
-    <div class="hud-bar" id="hud" aria-live="off"></div><div class="page" id="view"></div>
+    <div class="topline" id="topline"><a class="brand" href="#overview" aria-label="Freedom Ledger, go to Overview"><span class="reactor" aria-hidden="true"></span><div class="brand-name" aria-hidden="true"><h1>Freedom Ledger</h1><small>Wealth command</small></div></a>
+      <div class="topinfo" aria-live="off"><span id="fxline"></span><span class="sep" aria-hidden="true">·</span><span class="clock" id="clock"></span></div></div><div class="page" id="view"></div>
   </main>
 </div>
 <div class="dock" id="dock">
@@ -578,6 +600,7 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
       <a href="#assets" data-label="Assets"><span class="ic" aria-hidden="true">◆</span>Assets</a>
       <a href="#invest" data-label="Invest"><span class="ic" aria-hidden="true">▲</span>Invest &amp; dividends</a>
       <a href="#hustle" data-label="Hustle"><span class="ic" aria-hidden="true">✦</span>Hustle</a>
+      <a href="#status" data-label="Status"><span class="ic" aria-hidden="true">◍</span>Status</a>
       <a href="#setup" data-label="Setup"><span class="ic" aria-hidden="true">⚙</span>Setup</a>
     </nav>
     <div class="foot">Market data: Alpha Vantage. Exchange rates: Frankfurter. Both found via the public-apis list.</div>
@@ -1664,14 +1687,14 @@ async function loadPhone(){
 }
 
 /* ---------- render & events ---------- */
-const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, assets:viewAssets, invest:viewInvest, hustle:viewHustle, setup:viewSettings };
+const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, assets:viewAssets, invest:viewInvest, hustle:viewHustle, status:viewStatus, setup:viewSettings };
 function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
 const SKINS = {
   stark:    { name:"Stark Gold",    tag:"Onyx black with gold and emerald. Pages rise in.", meta:"#050605" },
   vault:    { name:"Emerald Vault", tag:"Deep private-bank green with champagne gold. Pages settle in like a vault door.", meta:"#03140d" },
   platinum: { name:"Black Card",    tag:"Midnight with platinum, sapphire and rose gold. Pages glide sideways.", meta:"#06070c" }
 };
-const ORDER = ["overview","budget","debt","goals","assets","invest","hustle","setup"];
+const ORDER = ["overview","budget","debt","goals","assets","invest","hustle","status","setup"];
 const reduceMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
 let lastRoute = null, enterTimer, lastHTML = "", navTimer;
 /* A selector that finds "the same field" again after the page is redrawn. */
@@ -1750,24 +1773,55 @@ function render(){
   hud();
   if (r === "setup") loadPhone();
 }
-function hud(){
+/* Status: market data, sync and currency. Shown on the Status tab; the top bar keeps only the rate and the time. */
+function statusInfo(){
   const live = S.holdings.some(h => cached("GLOBAL_QUOTE", h.symbol));
-  const fx = fxCached();
+  const fx = fxCached(), cur = S.settings.currency;
   const syncTxt = MODE === "online"
     ? { connecting:"Connecting…", linked:"Saved to your account", offline:"Offline · saved here", device:"This device only", full:"Account storage full" }[sync]
     : { local:"This device only", connecting:"Linking…", linked:"Synced with PC", offline:"PC offline · saved here", denied:"Access key needed" }[sync];
+  const syncWhy = MODE === "online"
+    ? { connecting:"Reaching your Claude account.", linked:"Every change is saved to your Claude account, so it's the same on every device you sign in on.", offline:"Can't reach your account right now. Changes are kept on this device and sent when the connection is back.", device:"This page can't save to your account here, so changes stay on this device.", full:"Your account's storage for this page is full. Changes are kept on this device." }[sync]
+    : { local:MODE === "pwa" ? "The phone app keeps your numbers on this phone. Use Copy backup and Restore in Setup to move them." : "Saved in this browser only. Open the app with Start Freedom Ledger.bat to share it with your phone.", connecting:"Reaching the Freedom Ledger window on your PC.", linked:"Your PC and phone share the same numbers. The newest change wins.", offline:"Can't reach your PC. Changes are kept here and sent when it's back.", denied:"This device needs the phone link from the PC's Setup page." }[sync];
+  const qts = Object.entries(C).filter(([k]) => k.startsWith("GLOBAL_QUOTE:")).map(([, v]) => v.t || 0);
+  const lastT = qts.length ? Math.max(...qts) : 0;
   let mkt = navigator.onLine === false ? "Offline" : live ? "Online" : "Standby";
-  if (MODE === "online"){
-    const ts = Object.entries(C).filter(([k]) => k.startsWith("GLOBAL_QUOTE:")).map(([, v]) => v.t || 0);
-    mkt = ts.length ? "Snapshot " + new Date(Math.max(...ts)).toLocaleDateString(undefined, { day:"numeric", month:"short" }) : "Manual";
-  }
-  document.getElementById("hud").innerHTML =
-    `<span><i class="dot ${live && MODE !== "online" ? "" : "off"}"></i>Market data <b>${mkt}</b></span>` +
-    `<span><i class="dot ${sync === "linked" ? "" : "off"}"></i>Sync <b>${syncTxt}</b></span>` +
-    `<span>Currency <b>${esc(S.settings.currency)}</b>${fx && S.settings.currency !== "USD" ? ` · 1 USD = <b>${fx.toFixed(2)}</b>` : ""}</span>` +
-    `<button class="skin-next" data-skin-next title="Switch look">◐ <b>${SKINS[skinKey()].name}</b></button>` +
-    `<span class="clock" id="clock"></span>`;
+  if (MODE === "online") mkt = lastT ? "Snapshot " + new Date(lastT).toLocaleDateString(undefined, { day:"numeric", month:"short" }) : "Manual";
+  const quoted = S.holdings.filter(h => h.symbol && cached("GLOBAL_QUOTE", h.symbol)).length;
+  const fxTxt = cur !== "USD" && fx ? `1 USD = ${fx.toFixed(2)} ${cur}` : cur;
+  return { live, fx, cur, syncTxt, syncWhy, mkt, lastT, quoted, fxTxt, marketOk: live && MODE !== "online", syncOk: sync === "linked" };
+}
+function hud(){
+  const i = statusInfo(), fl = document.getElementById("fxline");
+  if (fl && fl.textContent !== i.fxTxt) fl.textContent = i.fxTxt;
+  const box = document.getElementById("statusLive");
+  if (box){ const h = statusBlock(i); if (box.dataset.h !== h){ const first = !box.dataset.h; box.dataset.h = h; if (!first){ box.innerHTML = h; spotlight(); } } }
   tick();
+}
+function statusBlock(i){
+  return `<div class="grid g2">
+    <div class="panel"><div class="panel-head"><h3>Market data</h3><span class="chip ${i.marketOk ? "good" : "warn"}"><i class="dot ${i.marketOk ? "" : "off"}"></i>${esc(i.mkt)}</span></div>
+      <p class="small muted" style="margin:0">${MODE === "online" ? "This online version doesn't fetch live prices. It shows the latest snapshot from a backup, or prices you type in." : `Prices and dividend dates come from Alpha Vantage${S.settings.avKey && S.settings.avKey !== "demo" ? " with your own key (25 lookups a day)" : " with the demo key, which only covers IBM"}.`}</p>
+      <div class="kv"><div>Holdings with a live price<b>${i.quoted} of ${S.holdings.filter(h => h.symbol).length}</b></div><div>Last price update<b>${i.lastT ? new Date(i.lastT).toLocaleString(undefined, { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : "—"}</b></div></div>
+      ${MODE === "online" ? "" : `<div><a class="btn" href="#invest">Refresh on the Invest page</a></div>`}</div>
+    <div class="panel"><div class="panel-head"><h3>Sync</h3><span class="chip ${i.syncOk ? "good" : "warn"}"><i class="dot ${i.syncOk ? "" : "off"}"></i>${esc(i.syncTxt)}</span></div>
+      <p class="small muted" style="margin:0">${esc(i.syncWhy)}</p>
+      <div class="kv"><div>Last change saved<b>${S.updatedAt ? new Date(S.updatedAt).toLocaleString(undefined, { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : "—"}</b></div><div>Version<b>${MODE === "online" ? "Online" : MODE === "pwa" ? "Phone app" : "PC"}</b></div></div></div>
+    <div class="panel"><div class="panel-head"><h3>Currency</h3><span class="chip gold">${esc(i.cur)}</span></div>
+      <p class="small muted" style="margin:0">Budget, debts, goals, assets and hustle show in ${esc(i.cur)}. Share prices stay in US dollars.</p>
+      <div class="kv"><div>Exchange rate<b>${i.cur === "USD" ? "Not needed" : i.fx ? "1 USD = " + i.fx.toFixed(4) : "Not loaded"}</b></div><div>Source<b>${S.settings.manualFx && (MODE === "online" || !i.fx) ? "Your own rate" : "Frankfurter"}</b></div></div>
+      <div><a class="btn" href="#setup">Change currency</a></div></div>
+    <div class="panel"><div class="panel-head"><h3>Look</h3><span class="chip">${esc(SKINS[skinKey()].name)}</span></div>
+      <p class="small muted" style="margin:0">Switch between the three skins. Setup has previews of each.</p>
+      <div><button class="btn" data-skin-next>◐ Next skin</button></div></div>
+  </div>
+  <p class="small muted" style="margin:0">Market data: Alpha Vantage. Exchange rates: Frankfurter. Both found via the public-apis list.</p>`;
+}
+function viewStatus(){
+  return `
+  <div class="page-head"><div><div class="eyebrow">Status</div><h2>System status</h2>
+  <p>Where your prices, exchange rate and saved data come from, and whether everything is connected.</p></div></div>
+  <div id="statusLive" style="display:flex;flex-direction:column;gap:16px">${statusBlock(statusInfo())}</div>`;
 }
 /* Phones show minutes only: changing text re-lays-out the page, and doing that every second can catch a scroll mid-swipe. */
 const touchScreen = window.matchMedia ? matchMedia("(hover: none)").matches : false;
@@ -1863,6 +1917,8 @@ view.addEventListener("click", async e => {
 
 /* first load: use cached data, fetch what's missing quietly */
 render();
+/* Show the name for 3 seconds, then fold it into the logo and leave the rate and time beside it. */
+setTimeout(() => document.getElementById("topline").classList.add("collapsed"), 3000);
 /* Installable phone app: cache the app so it opens with no connection. */
 if (MODE === "pwa" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 window.addEventListener("online", () => { hud(); });
