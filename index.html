@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: a heads-up display. Command rail on the left (top tabs on phones), glass instrument panels on a faint targeting grid.
    Deliberately single-theme: wealth colours. Onyx ground, ivory text, gold as the primary glow, deep emerald for growth. */
@@ -22,6 +22,9 @@
   --ink:#f4efe3; --muted:#9e9886; --accent:#e6c068; --accent-ink:#1a1405;
   --gold:#ffd36b; --good:#2fd18b; --warn:#f0a03c; --bad:#ff5a5f; --hot:#0f8a5c;
   --glow:0 0 22px rgba(230,192,104,.28);
+  --hot-rgb:15,138,92; --rail-bg:linear-gradient(180deg,rgba(14,16,12,.94),rgba(5,6,5,.97)); --sheet-bg:rgba(11,13,11,.97); --opt:#0d100e;
+  --prim:linear-gradient(135deg,#fbe6a6,var(--accent) 55%,#b8892f); --fill:linear-gradient(90deg,#b8892f,var(--accent),#fff3c9);
+  --core:#fffaf0; --core2:#fbe6a6;
   --display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
   --body:"Inter", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
@@ -142,7 +145,7 @@ svg.chart text{fill:var(--muted);font:11px var(--mono)}
 body{
   background:
     radial-gradient(1100px 620px at 78% -12%, rgba(var(--acc-rgb),.14), transparent 60%),
-    radial-gradient(760px 520px at -8% 108%, rgba(15,138,92,.16), transparent 60%),
+    radial-gradient(760px 520px at -8% 108%, rgba(var(--hot-rgb),.16), transparent 60%),
     linear-gradient(rgba(var(--acc-rgb),.035) 1px, transparent 1px) 0 0/44px 44px,
     linear-gradient(90deg, rgba(var(--acc-rgb),.035) 1px, transparent 1px) 0 0/44px 44px,
     var(--bg);
@@ -155,12 +158,12 @@ h3{font-size:.95rem;letter-spacing:.12em;color:var(--accent)}
 .eyebrow::before{content:"▸ "}
 .page-head p{color:var(--muted)}
 
-.rail{background:linear-gradient(180deg,rgba(14,16,12,.94),rgba(5,6,5,.97));border-right:1px solid var(--line);box-shadow:inset -1px 0 0 rgba(var(--acc-rgb),.06)}
+.rail{background:var(--rail-bg);border-right:1px solid var(--line);box-shadow:inset -1px 0 0 rgba(var(--acc-rgb),.06)}
 .brand{display:flex;align-items:center;gap:12px}
 .brand h1{font-size:1.05rem;letter-spacing:.14em;line-height:1.2}
 .brand small{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);opacity:.7}
 .reactor{flex:0 0 38px;width:38px;height:38px;border-radius:50%;position:relative;
-  background:radial-gradient(circle,#fffaf0 0 14%,#fbe6a6 22%,rgba(var(--acc-rgb),.35) 38%,transparent 40%),
+  background:radial-gradient(circle,var(--core) 0 14%,var(--core2) 22%,rgba(var(--acc-rgb),.35) 38%,transparent 40%),
     repeating-conic-gradient(rgba(var(--acc-rgb),.9) 0 18deg,transparent 18deg 30deg);
   -webkit-mask:radial-gradient(circle,#000 0 41%,transparent 42% 55%,#000 56% 70%,transparent 71%);
           mask:radial-gradient(circle,#000 0 41%,transparent 42% 55%,#000 56% 70%,transparent 71%);
@@ -196,18 +199,18 @@ tbody tr:hover td{background:rgba(var(--acc-rgb),.04)}
 .cell:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(var(--acc-rgb),.15),var(--glow);outline:none}
 .field{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
 .field input,.field select{background:var(--sunk);border-radius:3px;font-family:var(--body);letter-spacing:0;text-transform:none}
-select option{background:#0d100e;color:var(--ink)}
+select option{background:var(--opt);color:var(--ink)}
 
 .btn{font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:.8rem;background:rgba(var(--acc-rgb),.05);border-color:var(--line-hi);border-radius:3px;color:var(--ink)}
 .btn:hover{background:rgba(var(--acc-rgb),.14);box-shadow:var(--glow)}
-.btn.primary{background:linear-gradient(135deg,#fbe6a6,var(--accent) 55%,#b8892f);color:var(--accent-ink);border-color:transparent;font-weight:700;
+.btn.primary{background:var(--prim);color:var(--accent-ink);border-color:transparent;font-weight:700;
   clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:none}
 .btn.primary:hover{filter:brightness(1.12) drop-shadow(0 0 10px rgba(var(--acc-rgb),.6))}
 .btn.ghost{background:transparent;border-color:transparent}
 .btn.ghost:hover{color:var(--bad);box-shadow:none}
 
 .bar{height:8px;background:rgba(var(--acc-rgb),.07);border-color:var(--line);border-radius:2px}
-.bar>i{border-radius:2px;background:linear-gradient(90deg,#b8892f,var(--accent),#fff3c9);box-shadow:0 0 12px rgba(var(--acc-rgb),.7)}
+.bar>i{border-radius:2px;background:var(--fill);box-shadow:0 0 12px rgba(var(--acc-rgb),.7)}
 .bar.gold>i{background:linear-gradient(90deg,var(--hot),var(--gold));box-shadow:0 0 12px rgba(255,181,71,.6)}
 .chip{font-family:var(--mono);font-weight:400;text-transform:uppercase;letter-spacing:.12em;font-size:.64rem;border-radius:2px;background:rgba(255,255,255,.02)}
 .chip.good{background:rgba(63,245,176,.08)} .chip.warn{background:rgba(255,181,71,.08)} .chip.bad{background:rgba(255,77,94,.08)} .chip.gold{background:rgba(255,181,71,.1)}
@@ -242,7 +245,6 @@ svg.chart text{font-size:10px}
 @media (prefers-reduced-motion: no-preference){
   .gauge::before{animation:spin 40s linear infinite}
   .reactor{animation:pulse 3.2s ease-in-out infinite}
-  .page{animation:boot .45s ease-out both}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{50%{filter:drop-shadow(0 0 14px rgba(var(--acc-rgb),1))}}
@@ -262,7 +264,7 @@ main{padding-bottom:max(64px,env(safe-area-inset-bottom))}
 /* detail sheet */
 .sheet{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .sheet-back{position:absolute;inset:0;background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
-.sheet-card{position:relative;width:min(780px,100%);max-height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:rgba(11,13,11,.97)!important;gap:20px!important;padding:22px!important;outline:none}
+.sheet-card{position:relative;width:min(780px,100%);max-height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:var(--sheet-bg)!important;gap:20px!important;padding:22px!important;outline:none}
 .sheet-card h3{font-size:1.1rem}
 .sheet-sec{display:flex;flex-direction:column;gap:10px}
 .stack{display:flex;height:20px;border-radius:2px;overflow:hidden;border:1px solid var(--line)}
@@ -292,6 +294,149 @@ main{padding-bottom:max(64px,env(safe-area-inset-bottom))}
   .nav{scrollbar-width:none} .nav::-webkit-scrollbar{display:none}
   .brand h1{font-size:.95rem}
   .reactor{flex-basis:28px;width:28px;height:28px}
+}
+
+/* ===== Skins. "stark" is the base above; "vault" and "platinum" restyle it. ===== */
+.nav a{transition:background-color .3s,color .3s,border-color .3s,box-shadow .3s}
+body{transition:background-color .4s}
+
+/* Emerald Vault: private-bank green, champagne gold, art-deco scallop pattern, engraved serif */
+:root[data-skin="vault"]{
+  --acc-rgb:221,184,112; --hot-rgb:22,120,84;
+  --bg:#03140d; --surface:rgba(7,34,23,.74); --sunk:rgba(2,16,10,.9); --line:rgba(221,184,112,.2); --line-hi:rgba(221,184,112,.55);
+  --ink:#f5eedb; --muted:#a3b8a8; --accent:#ddb870; --accent-ink:#1d1606;
+  --gold:#f2cf7a; --good:#5be3a6; --warn:#f0b04a; --bad:#ff7466;
+  --glow:0 0 20px rgba(221,184,112,.22);
+  --display:"Cinzel", Georgia, "Times New Roman", serif;
+  --rail-bg:linear-gradient(180deg,rgba(4,30,20,.95),rgba(2,14,9,.98)); --sheet-bg:rgba(4,24,16,.97); --opt:#062216;
+  --prim:linear-gradient(135deg,#f7e2a8,#ddb870 50%,#a67c32); --fill:linear-gradient(90deg,#0f6b4a,#2fbf83 55%,#ddb870);
+  --core:#fff6dc; --core2:#ddb870;
+}
+:root[data-skin="vault"] body{
+  background:
+    radial-gradient(900px 600px at 50% -10%, rgba(var(--acc-rgb),.13), transparent 62%),
+    radial-gradient(800px 600px at 100% 110%, rgba(var(--hot-rgb),.28), transparent 60%),
+    radial-gradient(circle at 50% 100%, transparent 0 7px, rgba(var(--acc-rgb),.08) 8px 9px, transparent 10px 15px, rgba(var(--acc-rgb),.065) 16px 17px, transparent 18px 23px, rgba(var(--acc-rgb),.05) 24px 25px, transparent 26px) 0 0/52px 26px,
+    radial-gradient(circle at 50% 100%, transparent 0 7px, rgba(var(--acc-rgb),.08) 8px 9px, transparent 10px 15px, rgba(var(--acc-rgb),.065) 16px 17px, transparent 18px 23px, rgba(var(--acc-rgb),.05) 24px 25px, transparent 26px) 26px 13px/52px 26px,
+    var(--bg);
+  background-attachment:fixed;
+}
+:root[data-skin="vault"] h1,:root[data-skin="vault"] h2,:root[data-skin="vault"] h3{letter-spacing:.08em}
+:root[data-skin="vault"] h2{font-weight:700;background:linear-gradient(180deg,#fff6dc 10%,var(--accent) 60%,#a67c32);-webkit-background-clip:text;background-clip:text}
+:root[data-skin="vault"] .eyebrow::before{content:"◆ "}
+:root[data-skin="vault"] .panel,:root[data-skin="vault"] .goal{border-radius:14px;
+  box-shadow:inset 0 0 0 4px rgba(2,16,10,.55),inset 0 0 0 5px rgba(var(--acc-rgb),.14),0 14px 34px rgba(0,0,0,.4)}
+:root[data-skin="vault"] .panel::before,:root[data-skin="vault"] .goal::before{width:auto;height:0;left:22%;right:22%;top:-1px;border-width:1px 0 0;border-color:var(--accent);opacity:1;filter:drop-shadow(0 0 6px var(--accent))}
+:root[data-skin="vault"] .panel::after,:root[data-skin="vault"] .goal::after{display:none}
+:root[data-skin="vault"] .btn,:root[data-skin="vault"] .field input,:root[data-skin="vault"] .field select,:root[data-skin="vault"] .seg,:root[data-skin="vault"] .chip,:root[data-skin="vault"] .date-badge{border-radius:999px}
+:root[data-skin="vault"] .btn.primary{clip-path:none;border-radius:999px;box-shadow:0 4px 18px rgba(var(--acc-rgb),.25)}
+:root[data-skin="vault"] .nav a{border-radius:999px;font-size:.8rem}
+:root[data-skin="vault"] .nav a[aria-current="page"]{background:linear-gradient(90deg,rgba(var(--acc-rgb),.26),rgba(var(--hot-rgb),.2))}
+:root[data-skin="vault"] .nav a[aria-current="page"]::before{left:8px;top:50%;bottom:auto;width:6px;height:6px;transform:translateY(-50%) rotate(45deg)}
+:root[data-skin="vault"] .nav a[aria-current="page"]{padding-left:24px}
+:root[data-skin="vault"] .bar,:root[data-skin="vault"] .bar>i{border-radius:99px}
+:root[data-skin="vault"] .reactor{background:radial-gradient(circle,var(--core) 0 16%,var(--core2) 24%,transparent 26%),repeating-conic-gradient(rgba(var(--acc-rgb),.95) 0 6deg,transparent 6deg 15deg);
+  -webkit-mask:radial-gradient(circle,#000 0 70%,transparent 71%);mask:radial-gradient(circle,#000 0 70%,transparent 71%)}
+:root[data-skin="vault"] .gauge{background:radial-gradient(circle,var(--bg) 0 56%,transparent 57%),conic-gradient(from -90deg,#1f9e6c,var(--accent) calc(var(--p)*1%),rgba(var(--acc-rgb),.1) 0)}
+:root[data-skin="vault"] .sheet-card{border-radius:18px!important}
+
+/* Black Card: platinum, sapphire and rose gold on midnight, guilloche banknote engraving */
+:root[data-skin="platinum"]{
+  --acc-rgb:214,221,234; --hot-rgb:44,92,220;
+  --bg:#06070c; --surface:rgba(20,24,36,.66); --sunk:rgba(8,10,18,.9); --line:rgba(214,221,234,.14); --line-hi:rgba(214,221,234,.42);
+  --ink:#f3f5fa; --muted:#959cb0; --accent:#d6ddea; --accent-ink:#0a0d16;
+  --gold:#f0b9a0; --good:#4fd8b4; --warn:#f2b660; --bad:#ff6b81;
+  --glow:0 0 22px rgba(120,160,255,.22);
+  --display:"Inter", "Segoe UI", system-ui, sans-serif;
+  --rail-bg:linear-gradient(180deg,rgba(14,17,28,.95),rgba(6,7,12,.98)); --sheet-bg:rgba(12,14,24,.97); --opt:#10131f;
+  --prim:linear-gradient(120deg,#8a93a6,#f4f6fb 35%,#b9c2d3 55%,#ffffff 70%,#8a93a6); --fill:linear-gradient(90deg,#2c5cdc,#7aa2ff 55%,#e9eef8);
+  --core:#ffffff; --core2:#a9c2ff;
+}
+:root[data-skin="platinum"] body{
+  background:
+    radial-gradient(1000px 640px at 85% -15%, rgba(var(--hot-rgb),.22), transparent 60%),
+    radial-gradient(700px 520px at -10% 110%, rgba(240,185,160,.1), transparent 60%),
+    repeating-radial-gradient(circle at 12% 18%, transparent 0 11px, rgba(var(--acc-rgb),.06) 12px, transparent 13px),
+    repeating-radial-gradient(circle at 88% 82%, transparent 0 11px, rgba(var(--acc-rgb),.06) 12px, transparent 13px),
+    var(--bg);
+  background-attachment:fixed;
+}
+:root[data-skin="platinum"] h1,:root[data-skin="platinum"] h2,:root[data-skin="platinum"] h3{font-weight:700}
+:root[data-skin="platinum"] h2{text-transform:none;letter-spacing:-.025em;font-size:2.1rem;font-weight:600;background:linear-gradient(100deg,#9aa3b6 0%,#ffffff 30%,#c3cad8 55%,#ffffff 75%,#9aa3b6);-webkit-background-clip:text;background-clip:text}
+:root[data-skin="platinum"] h3{letter-spacing:.16em;font-size:.82rem}
+:root[data-skin="platinum"] .eyebrow::before{content:"— "}
+:root[data-skin="platinum"] .nav a{font-family:var(--body);text-transform:none;letter-spacing:.01em;font-size:.92rem;border-radius:10px}
+:root[data-skin="platinum"] .nav a[aria-current="page"]{background:linear-gradient(120deg,rgba(255,255,255,.14),rgba(var(--hot-rgb),.22));box-shadow:0 0 0 1px rgba(255,255,255,.08),var(--glow)}
+:root[data-skin="platinum"] .nav a[aria-current="page"]::before{background:linear-gradient(180deg,#fff,#7aa2ff);box-shadow:0 0 10px #7aa2ff;border-radius:3px}
+:root[data-skin="platinum"] .panel,:root[data-skin="platinum"] .goal{border-radius:20px;
+  background:linear-gradient(140deg,rgba(255,255,255,.07),rgba(255,255,255,0) 38%),var(--surface);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 18px 40px rgba(0,0,0,.45)}
+:root[data-skin="platinum"] .panel::before,:root[data-skin="platinum"] .goal::before,:root[data-skin="platinum"] .panel::after,:root[data-skin="platinum"] .goal::after{display:none}
+:root[data-skin="platinum"] .btn{font-family:var(--body);text-transform:none;letter-spacing:.01em;font-size:.88rem;border-radius:10px}
+:root[data-skin="platinum"] .btn.primary{clip-path:none;border-radius:10px;background-size:220% 100%;transition:background-position .6s}
+:root[data-skin="platinum"] .btn.primary:hover{background-position:100% 0}
+:root[data-skin="platinum"] .field input,:root[data-skin="platinum"] .field select,:root[data-skin="platinum"] .cell{border-radius:10px}
+:root[data-skin="platinum"] .seg,:root[data-skin="platinum"] .chip,:root[data-skin="platinum"] .date-badge{border-radius:8px}
+:root[data-skin="platinum"] .seg button{font-family:var(--body);text-transform:none}
+:root[data-skin="platinum"] .bar,:root[data-skin="platinum"] .bar>i{border-radius:99px}
+:root[data-skin="platinum"] .reactor{background:conic-gradient(from 200deg,#8a93a6,#ffffff,#b9c2d3,#7aa2ff,#ffffff,#8a93a6);
+  -webkit-mask:radial-gradient(circle,transparent 0 30%,#000 31% 70%,transparent 71%);mask:radial-gradient(circle,transparent 0 30%,#000 31% 70%,transparent 71%);filter:drop-shadow(0 0 8px rgba(122,162,255,.7))}
+:root[data-skin="platinum"] .gauge{background:radial-gradient(circle,var(--bg) 0 56%,transparent 57%),conic-gradient(from -90deg,#2c5cdc,#7aa2ff,#ffffff calc(var(--p)*1%),rgba(var(--acc-rgb),.08) 0)}
+:root[data-skin="platinum"] .sheet-card{border-radius:22px!important}
+:root[data-skin="platinum"] .stat .v{text-shadow:none}
+
+/* Skin picker (Setup) and quick switch (status bar) */
+.skin-next{background:none;border:1px solid var(--line);border-radius:99px;padding:3px 10px;cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--muted);transition:border-color .25s,color .25s}
+.skin-next:hover{border-color:var(--accent);color:var(--ink)}
+.skins{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.skin-card{display:flex;flex-direction:column;gap:10px;text-align:left;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--sunk);cursor:pointer;color:var(--ink);transition:border-color .25s,box-shadow .25s,transform .25s}
+.skin-card:hover{transform:translateY(-2px);border-color:var(--line-hi)}
+.skin-card[aria-pressed="true"]{border-color:var(--accent);box-shadow:var(--glow),inset 0 0 0 1px var(--accent)}
+.skin-card b{font-family:var(--body);font-size:.95rem;letter-spacing:0;text-transform:none}
+.skin-card span{font-size:.8rem;color:var(--muted)}
+.swatch{height:84px;border-radius:8px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.swatch i{position:absolute;border-radius:50%}
+.sw-stark{background:radial-gradient(120px 80px at 85% 0,rgba(230,192,104,.35),transparent 70%),linear-gradient(rgba(230,192,104,.12) 1px,transparent 1px) 0 0/14px 14px,linear-gradient(90deg,rgba(230,192,104,.12) 1px,transparent 1px) 0 0/14px 14px,#050605}
+.sw-stark i{left:14px;top:22px;width:40px;height:40px;background:radial-gradient(circle,#fffaf0 0 16%,#e6c068 30%,transparent 34%),repeating-conic-gradient(#e6c068 0 18deg,transparent 18deg 30deg);box-shadow:0 0 16px #e6c068}
+.sw-vault{background:radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(221,184,112,.35) 6px 7px,transparent 8px 11px,rgba(221,184,112,.25) 12px 13px,transparent 14px) 0 0/30px 15px,radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(221,184,112,.35) 6px 7px,transparent 8px 11px,rgba(221,184,112,.25) 12px 13px,transparent 14px) 15px 7.5px/30px 15px,#03140d}
+.sw-vault i{left:14px;top:22px;width:40px;height:40px;background:radial-gradient(circle,#fff6dc 0 18%,#ddb870 28%,transparent 30%),repeating-conic-gradient(#ddb870 0 6deg,transparent 6deg 15deg);box-shadow:0 0 14px rgba(221,184,112,.8)}
+.sw-platinum{background:radial-gradient(120px 90px at 90% 0,rgba(44,92,220,.6),transparent 70%),repeating-radial-gradient(circle at 10% 20%,transparent 0 5px,rgba(214,221,234,.16) 6px,transparent 7px),#06070c}
+.sw-platinum i{left:14px;top:22px;width:40px;height:40px;background:conic-gradient(from 200deg,#8a93a6,#fff,#b9c2d3,#7aa2ff,#fff,#8a93a6);-webkit-mask:radial-gradient(circle,transparent 0 30%,#000 31%);mask:radial-gradient(circle,transparent 0 30%,#000 31%)}
+.swatch em{position:absolute;right:12px;bottom:12px;left:68px;height:8px;border-radius:99px}
+.sw-stark em{background:linear-gradient(90deg,#b8892f,#e6c068,#fff3c9);box-shadow:0 0 10px rgba(230,192,104,.7)}
+.sw-vault em{background:linear-gradient(90deg,#0f6b4a,#2fbf83,#ddb870)}
+.sw-platinum em{background:linear-gradient(90deg,#2c5cdc,#7aa2ff,#e9eef8)}
+
+/* ===== Tab transitions. Old page leaves and new page arrives, styled per skin; panels then cascade in. ===== */
+#view{view-transition-name:page}
+:root.vt-skin #view{view-transition-name:none}
+::view-transition-old(page),::view-transition-new(page){mix-blend-mode:normal;height:auto}
+::view-transition-group(page){animation-duration:.5s}
+::view-transition-new(page){animation:vtIn .3s ease-out both}
+:root[data-skin="stark"]::view-transition-old(page){animation:hudOut .24s ease-in both}
+:root[data-skin="vault"]::view-transition-old(page){animation:vaultOut .38s ease-in both}
+:root[data-skin="platinum"]::view-transition-old(page){animation:platOut .32s cubic-bezier(.4,0,1,1) both}
+:root.vt-skin::view-transition-old(root){animation:none}
+:root.vt-skin::view-transition-new(root){animation:reveal .8s cubic-bezier(.65,0,.2,1) both}
+@keyframes vtIn{from{opacity:0}}
+@keyframes hudOut{to{opacity:0;transform:translateY(-12px);filter:brightness(1.8) blur(2px)}}
+@keyframes vaultOut{to{opacity:0;transform:scale(1.035);filter:blur(8px)}}
+@keyframes platOut{to{opacity:0;transform:translateX(calc(var(--sx,1) * -48px))}}
+@keyframes reveal{from{clip-path:circle(0 at var(--rx,50%) var(--ry,50%))}to{clip-path:circle(150vmax at var(--rx,50%) var(--ry,50%))}}
+:root[data-dir="back"]{--sx:-1}
+
+.enter>*{animation:var(--rise,hudRise) .6s cubic-bezier(.2,.8,.2,1) backwards}
+.enter>*:nth-child(2){animation-delay:.06s} .enter>*:nth-child(3){animation-delay:.12s} .enter>*:nth-child(4){animation-delay:.18s} .enter>*:nth-child(n+5){animation-delay:.24s}
+.enter .grid>*{animation:var(--rise,hudRise) .6s cubic-bezier(.2,.8,.2,1) backwards}
+.enter .grid>*:nth-child(2){animation-delay:.1s} .enter .grid>*:nth-child(3){animation-delay:.16s} .enter .grid>*:nth-child(n+4){animation-delay:.22s}
+:root[data-skin="vault"]{--rise:vaultRise}
+:root[data-skin="platinum"]{--rise:platRise}
+@keyframes hudRise{from{opacity:0;transform:translateY(14px);clip-path:inset(-20px -20px 100% -20px)}to{clip-path:inset(-20px -20px -60px -20px)}}
+@keyframes vaultRise{from{opacity:0;transform:translateY(18px) scale(.98);filter:blur(6px)}}
+@keyframes platRise{from{opacity:0;transform:translateX(calc(var(--sx,1) * 36px))}}
+@media (prefers-reduced-motion: reduce){
+  .enter>*,.enter .grid>*{animation:none!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
 }
 </style>
 </head>
@@ -902,6 +1047,8 @@ function viewSettings(){
   const st = S.settings, curs = ["USD","ZAR","EUR","GBP","AUD","CAD","NZD","INR","JPY","CHF","SEK","NOK","DKK","PLN","BRL","MXN","SGD","HKD","CNY","KRW","TRY","ILS","PHP","THB","IDR","MYR","CZK","HUF","RON","ISK"];
   return `
   <div class="page-head"><div><div class="eyebrow">Settings</div><h2>Make it yours</h2></div></div>
+  <div class="panel"><div class="panel-head"><h3>Look &amp; feel</h3><span class="small muted">Saved with your numbers. You can also tap ◐ at the top of any page.</span></div>
+    <div class="skins">${Object.entries(SKINS).map(([k, s]) => `<button class="skin-card" data-skin-pick="${k}" aria-pressed="${skinKey() === k}"><div class="swatch sw-${k}" aria-hidden="true"><i></i><em></em></div><b>${s.name}</b><span>${s.tag}</span></button>`).join("")}</div></div>
   <div class="grid g2">
     <div class="panel"><h3>Currency</h3><p class="small muted" style="margin:0">Your budget, debts and goals show in this currency. Share prices stay in US dollars, with a conversion from Frankfurter beside them.</p>
       <label class="field">Your currency<select id="currency" data-set="currency">${curs.map(c => `<option ${c===st.currency?"selected":""}>${c}</option>`).join("")}</select></label>
@@ -1072,6 +1219,8 @@ document.addEventListener("click", e => {
     if (k === "strategy") S.strategy = v;
     save(); render(); openDetail(openKey); return; }
   if (e.target.closest("[data-close]")){ closeDetail(); return; }
+  if (e.target.closest("[data-skin-next]")){ const ks = Object.keys(SKINS); setSkin(ks[(ks.indexOf(skinKey()) + 1) % ks.length], e); return; }
+  const sk = e.target.closest("[data-skin-pick]"); if (sk){ setSkin(sk.dataset.skinPick, e); return; }
   const d = e.target.closest("[data-detail]");
   if (d && !e.target.closest("input,select,textarea,a,button")) openDetail(d.dataset.detail);
 });
@@ -1104,10 +1253,47 @@ async function loadPhone(){
 /* ---------- render & events ---------- */
 const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, invest:viewInvest, setup:viewSettings };
 function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
+const SKINS = {
+  stark:    { name:"Stark Gold",    tag:"Onyx, gold and emerald on a heads-up grid. Pages scan in.", meta:"#050605" },
+  vault:    { name:"Emerald Vault", tag:"Private-bank green, champagne gold and art-deco fans. Pages fade in like a vault door.", meta:"#03140d" },
+  platinum: { name:"Black Card",    tag:"Platinum, sapphire and rose gold on banknote engraving. Pages glide sideways.", meta:"#06070c" }
+};
+const ORDER = ["overview","budget","debt","goals","invest","setup"];
+const reduceMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
+let lastRoute = null, enterTimer;
+function skinKey(){ return SKINS[S.settings.skin] ? S.settings.skin : "stark"; }
+function applySkin(){
+  const k = skinKey(), root = document.documentElement;
+  if (root.dataset.skin === k) return;
+  root.dataset.skin = k;
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = SKINS[k].meta;
+}
+function setSkin(k, ev){
+  if (!SKINS[k] || k === skinKey()) return;
+  const go = () => { S.settings.skin = k; save(); render(); };
+  if (!document.startViewTransition || reduceMotion.matches) return go();
+  const root = document.documentElement;
+  if (ev && ev.clientX){ root.style.setProperty("--rx", ev.clientX + "px"); root.style.setProperty("--ry", ev.clientY + "px"); }
+  root.classList.add("vt-skin");
+  quiet(document.startViewTransition(go)).finished.catch(() => {}).then(() => root.classList.remove("vt-skin"));
+}
+/* A transition can be skipped (another tab tapped mid-animation). That's fine; don't report it as an error. */
+function quiet(t){ [t.ready, t.finished, t.updateCallbackDone].forEach(p => p && p.catch(() => {})); return t; }
+function revealNav(){
+  const nav = document.getElementById("nav"), cur = nav.querySelector("[aria-current]");
+  if (!cur || nav.scrollWidth <= nav.clientWidth) return;
+  const x = cur.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+  nav.scrollTo({ left: x - (nav.clientWidth - cur.offsetWidth) / 2, behavior: reduceMotion.matches ? "auto" : "smooth" });
+}
 function render(){
   const r = route();
+  applySkin();
   document.querySelectorAll("#nav a").forEach(a => a.getAttribute("href") === "#" + r ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
-  document.getElementById("view").innerHTML = views[r]();
+  const v = document.getElementById("view"), changed = r !== lastRoute; lastRoute = r;
+  clearTimeout(enterTimer);
+  v.classList.toggle("enter", changed && !reduceMotion.matches);
+  v.innerHTML = views[r]();
+  if (changed){ enterTimer = setTimeout(() => v.classList.remove("enter"), 1000); revealNav(); }
   hud();
   if (r === "setup") loadPhone();
 }
@@ -1126,12 +1312,17 @@ function hud(){
     `<span><i class="dot ${live && MODE !== "online" ? "" : "off"}"></i>Market data <b>${mkt}</b></span>` +
     `<span><i class="dot ${sync === "linked" ? "" : "off"}"></i>Sync <b>${syncTxt}</b></span>` +
     `<span>Currency <b>${esc(S.settings.currency)}</b>${fx && S.settings.currency !== "USD" ? ` · 1 USD = <b>${fx.toFixed(2)}</b>` : ""}</span>` +
+    `<button class="skin-next" data-skin-next title="Switch look">◐ <b>${SKINS[skinKey()].name}</b></button>` +
     `<span class="clock" id="clock"></span>`;
   tick();
 }
 function tick(){ const c = document.getElementById("clock"); if (c) c.textContent = new Date().toLocaleString(undefined, {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
 setInterval(tick, 1000);
-window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
+window.addEventListener("hashchange", () => {
+  document.documentElement.dataset.dir = ORDER.indexOf(route()) < ORDER.indexOf(lastRoute) ? "back" : "fwd";
+  const run = () => { render(); window.scrollTo(0,0); };
+  if (document.startViewTransition && !reduceMotion.matches) quiet(document.startViewTransition(run)); else run();
+});
 
 const view = document.getElementById("view");
 view.addEventListener("change", e => {
