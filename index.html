@@ -142,15 +142,7 @@ svg.chart text{fill:var(--muted);font:11px var(--mono)}
 @media (prefers-reduced-motion: no-preference){ .bar>i{transition:width .5s ease} }
 
 /* ===== HUD layer ===== */
-/* The pattern sits on its own fixed layer so scrolling never has to repaint it. */
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;transform:translateZ(0);
-  background:
-    radial-gradient(1100px 620px at 78% -12%, rgba(var(--acc-rgb),.14), transparent 60%),
-    radial-gradient(760px 520px at -8% 108%, rgba(var(--hot-rgb),.16), transparent 60%),
-    linear-gradient(rgba(var(--acc-rgb),.035) 1px, transparent 1px) 0 0/44px 44px,
-    linear-gradient(90deg, rgba(var(--acc-rgb),.035) 1px, transparent 1px) 0 0/44px 44px,
-    var(--bg);
-}
+/* Background: a plain dark colour per skin (--bg), no pattern. */
 h1,h2,h3{text-transform:uppercase;letter-spacing:.04em}
 h2{font-size:1.9rem;font-weight:700;background:linear-gradient(90deg,var(--ink) 40%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
 h3{font-size:.95rem;letter-spacing:.12em;color:var(--accent)}
@@ -181,8 +173,8 @@ h3{font-size:.95rem;letter-spacing:.12em;color:var(--accent)}
 .hud-bar .clock{margin-left:auto;color:var(--accent)}
 
 .panel,.goal{background:var(--surface);border:1px solid var(--line);border-radius:4px;position:relative;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.35)}
-.panel::before,.panel::after,.goal::before,.goal::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border-color:var(--accent);border-style:solid;opacity:.9;filter:drop-shadow(0 0 4px var(--accent))}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 1px 0 rgba(0,0,0,.4)}
+.panel::before,.panel::after,.goal::before,.goal::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border-color:var(--accent);border-style:solid;opacity:.9}
 .panel::before,.goal::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
 .panel::after,.goal::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
 .stat .v{font-size:1.7rem;text-shadow:0 0 18px rgba(var(--acc-rgb),.35)}
@@ -220,7 +212,6 @@ select option{background:var(--opt);color:var(--ink)}
 .date-badge b{color:var(--accent);text-shadow:0 0 10px rgba(var(--acc-rgb),.5)}
 .note{border-left-color:var(--gold);background:rgba(255,181,71,.06);border-radius:0 3px 3px 0}
 .kv b{color:var(--ink)}
-svg.chart path[stroke]{filter:drop-shadow(0 0 4px currentColor)}
 svg.chart text{font-size:10px}
 #importBox{background:var(--sunk)!important}
 
@@ -254,7 +245,7 @@ main{padding-bottom:max(64px,env(safe-area-inset-bottom))}
 
 /* tappable tiles */
 .tap{cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s}
-.panel.tap:hover,.panel.tap:focus-visible{border-color:var(--line-hi);box-shadow:var(--glow),0 10px 30px rgba(0,0,0,.35)}
+.panel.tap:hover,.panel.tap:focus-visible{border-color:var(--line-hi);box-shadow:var(--glow)}
 .panel.tap:active{transform:scale(.99)}
 .stat.tap .s::after,.hint{content:" · details ›";color:var(--accent);font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;white-space:nowrap}
 .readout .tap{border-radius:0 3px 3px 0;padding-block:4px}
@@ -311,20 +302,12 @@ body{transition:background-color .4s}
   --prim:linear-gradient(135deg,#f7e2a8,#ddb870 50%,#a67c32); --fill:linear-gradient(90deg,#0f6b4a,#2fbf83 55%,#ddb870);
   --core:#fff6dc; --core2:#ddb870;
 }
-:root[data-skin="vault"] body::before{
-  background:
-    radial-gradient(900px 600px at 50% -10%, rgba(var(--acc-rgb),.13), transparent 62%),
-    radial-gradient(800px 600px at 100% 110%, rgba(var(--hot-rgb),.28), transparent 60%),
-    radial-gradient(circle at 50% 100%, transparent 0 7px, rgba(var(--acc-rgb),.08) 8px 9px, transparent 10px 15px, rgba(var(--acc-rgb),.065) 16px 17px, transparent 18px 23px, rgba(var(--acc-rgb),.05) 24px 25px, transparent 26px) 0 0/52px 26px,
-    radial-gradient(circle at 50% 100%, transparent 0 7px, rgba(var(--acc-rgb),.08) 8px 9px, transparent 10px 15px, rgba(var(--acc-rgb),.065) 16px 17px, transparent 18px 23px, rgba(var(--acc-rgb),.05) 24px 25px, transparent 26px) 26px 13px/52px 26px,
-    var(--bg);
-}
 :root[data-skin="vault"] h1,:root[data-skin="vault"] h2,:root[data-skin="vault"] h3{letter-spacing:.08em}
 :root[data-skin="vault"] h2{font-weight:700;background:linear-gradient(180deg,#fff6dc 10%,var(--accent) 60%,#a67c32);-webkit-background-clip:text;background-clip:text}
 :root[data-skin="vault"] .eyebrow::before{content:"◆ "}
 :root[data-skin="vault"] .panel,:root[data-skin="vault"] .goal{border-radius:14px;
-  box-shadow:inset 0 0 0 4px rgba(2,16,10,.55),inset 0 0 0 5px rgba(var(--acc-rgb),.14),0 14px 34px rgba(0,0,0,.4)}
-:root[data-skin="vault"] .panel::before,:root[data-skin="vault"] .goal::before{width:auto;height:0;left:22%;right:22%;top:-1px;border-width:1px 0 0;border-color:var(--accent);opacity:1;filter:drop-shadow(0 0 6px var(--accent))}
+  box-shadow:inset 0 0 0 4px rgba(2,16,10,.55),inset 0 0 0 5px rgba(var(--acc-rgb),.14)}
+:root[data-skin="vault"] .panel::before,:root[data-skin="vault"] .goal::before{width:auto;height:0;left:22%;right:22%;top:-1px;border-width:1px 0 0;border-color:var(--accent);opacity:1}
 :root[data-skin="vault"] .panel::after,:root[data-skin="vault"] .goal::after{display:none}
 :root[data-skin="vault"] .btn,:root[data-skin="vault"] .field input,:root[data-skin="vault"] .field select,:root[data-skin="vault"] .seg,:root[data-skin="vault"] .chip,:root[data-skin="vault"] .date-badge{border-radius:999px}
 :root[data-skin="vault"] .btn.primary{clip-path:none;border-radius:999px;box-shadow:0 4px 18px rgba(var(--acc-rgb),.25)}
@@ -350,14 +333,6 @@ body{transition:background-color .4s}
   --prim:linear-gradient(120deg,#8a93a6,#f4f6fb 35%,#b9c2d3 55%,#ffffff 70%,#8a93a6); --fill:linear-gradient(90deg,#2c5cdc,#7aa2ff 55%,#e9eef8);
   --core:#ffffff; --core2:#a9c2ff;
 }
-:root[data-skin="platinum"] body::before{
-  background:
-    radial-gradient(1000px 640px at 85% -15%, rgba(var(--hot-rgb),.22), transparent 60%),
-    radial-gradient(700px 520px at -10% 110%, rgba(240,185,160,.1), transparent 60%),
-    repeating-radial-gradient(circle at 12% 18%, transparent 0 11px, rgba(var(--acc-rgb),.06) 12px, transparent 13px),
-    repeating-radial-gradient(circle at 88% 82%, transparent 0 11px, rgba(var(--acc-rgb),.06) 12px, transparent 13px),
-    var(--bg);
-}
 :root[data-skin="platinum"] h1,:root[data-skin="platinum"] h2,:root[data-skin="platinum"] h3{font-weight:700}
 :root[data-skin="platinum"] h2{text-transform:none;letter-spacing:-.025em;font-size:2.1rem;font-weight:600;background:linear-gradient(100deg,#9aa3b6 0%,#ffffff 30%,#c3cad8 55%,#ffffff 75%,#9aa3b6);-webkit-background-clip:text;background-clip:text}
 :root[data-skin="platinum"] h3{letter-spacing:.16em;font-size:.82rem}
@@ -367,7 +342,7 @@ body{transition:background-color .4s}
 :root[data-skin="platinum"] .nav a[aria-current="page"]::before{background:linear-gradient(180deg,#fff,#7aa2ff);box-shadow:0 0 10px #7aa2ff;border-radius:3px}
 :root[data-skin="platinum"] .panel,:root[data-skin="platinum"] .goal{border-radius:20px;
   background:linear-gradient(140deg,rgba(255,255,255,.07),rgba(255,255,255,0) 38%),var(--surface);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 18px 40px rgba(0,0,0,.45)}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
 :root[data-skin="platinum"] .panel::before,:root[data-skin="platinum"] .goal::before,:root[data-skin="platinum"] .panel::after,:root[data-skin="platinum"] .goal::after{display:none}
 :root[data-skin="platinum"] .btn{font-family:var(--body);text-transform:none;letter-spacing:.01em;font-size:.88rem;border-radius:10px}
 :root[data-skin="platinum"] .btn.primary{clip-path:none;border-radius:10px;background-size:220% 100%;transition:background-position .6s}
@@ -393,11 +368,11 @@ body{transition:background-color .4s}
 .skin-card span{font-size:.8rem;color:var(--muted)}
 .swatch{height:84px;border-radius:8px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 .swatch i{position:absolute;border-radius:50%}
-.sw-stark{background:radial-gradient(120px 80px at 85% 0,rgba(230,192,104,.35),transparent 70%),linear-gradient(rgba(230,192,104,.12) 1px,transparent 1px) 0 0/14px 14px,linear-gradient(90deg,rgba(230,192,104,.12) 1px,transparent 1px) 0 0/14px 14px,#050605}
+.sw-stark{background:#050605}
 .sw-stark i{left:14px;top:22px;width:40px;height:40px;background:radial-gradient(circle,#fffaf0 0 16%,#e6c068 30%,transparent 34%),repeating-conic-gradient(#e6c068 0 18deg,transparent 18deg 30deg);box-shadow:0 0 16px #e6c068}
-.sw-vault{background:radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(221,184,112,.35) 6px 7px,transparent 8px 11px,rgba(221,184,112,.25) 12px 13px,transparent 14px) 0 0/30px 15px,radial-gradient(circle at 50% 100%,transparent 0 5px,rgba(221,184,112,.35) 6px 7px,transparent 8px 11px,rgba(221,184,112,.25) 12px 13px,transparent 14px) 15px 7.5px/30px 15px,#03140d}
+.sw-vault{background:#03140d}
 .sw-vault i{left:14px;top:22px;width:40px;height:40px;background:radial-gradient(circle,#fff6dc 0 18%,#ddb870 28%,transparent 30%),repeating-conic-gradient(#ddb870 0 6deg,transparent 6deg 15deg);box-shadow:0 0 14px rgba(221,184,112,.8)}
-.sw-platinum{background:radial-gradient(120px 90px at 90% 0,rgba(44,92,220,.6),transparent 70%),repeating-radial-gradient(circle at 10% 20%,transparent 0 5px,rgba(214,221,234,.16) 6px,transparent 7px),#06070c}
+.sw-platinum{background:#06070c}
 .sw-platinum i{left:14px;top:22px;width:40px;height:40px;background:conic-gradient(from 200deg,#8a93a6,#fff,#b9c2d3,#7aa2ff,#fff,#8a93a6);-webkit-mask:radial-gradient(circle,transparent 0 30%,#000 31%);mask:radial-gradient(circle,transparent 0 30%,#000 31%)}
 .swatch em{position:absolute;right:12px;bottom:12px;left:68px;height:8px;border-radius:99px}
 .sw-stark em{background:linear-gradient(90deg,#b8892f,#e6c068,#fff3c9);box-shadow:0 0 10px rgba(230,192,104,.7)}
@@ -410,6 +385,7 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 .topline{max-width:1080px;margin:0 auto 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .topline .brand{text-decoration:none;color:var(--ink)}
 .ro-link{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line-hi);padding:4px 0 4px 12px;text-decoration:none;color:inherit;border-radius:0 3px 3px 0}
+.readout .ro-link{text-align:left}
 .ro-link:hover{background:rgba(var(--acc-rgb),.07);border-left-color:var(--accent)}
 
 /* Frosted glass, used by the menu and the day card */
@@ -421,6 +397,13 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 .dock{position:fixed;left:max(16px, env(safe-area-inset-left, 0px));bottom:max(16px, env(safe-area-inset-bottom, 0px));z-index:40;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
 .dock-btn{display:inline-flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;border-radius:999px;cursor:pointer;color:var(--ink);font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:700;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
 .dock-btn:hover{transform:translateY(-2px)}
+/* The tab name shows for a few seconds, then shrinks back into the menu lines. */
+.dock-btn{transition:transform .25s cubic-bezier(.2,.8,.2,1),padding .55s cubic-bezier(.6,0,.2,1),gap .55s cubic-bezier(.6,0,.2,1)}
+#dockLabel{display:inline-block;max-width:200px;overflow:hidden;white-space:nowrap;transform-origin:left center;
+  transition:max-width .55s cubic-bezier(.6,0,.2,1),opacity .35s ease,transform .55s cubic-bezier(.6,0,.2,1)}
+.dock-btn.collapsed{padding-right:8px;gap:0}
+.dock-btn.collapsed #dockLabel{max-width:0;opacity:0;transform:translateX(-14px) scale(.6)}
+@media (prefers-reduced-motion: reduce){ .dock-btn,#dockLabel{transition:none} }
 .dock-btn:active{transform:scale(.96)}
 .burger{position:relative;width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--prim);box-shadow:var(--glow)}
 .burger::before,.burger::after{content:"";position:absolute;left:10px;right:10px;height:2px;border-radius:2px;background:var(--accent-ink);transition:top .35s cubic-bezier(.2,.8,.2,1),transform .35s cubic-bezier(.2,.8,.2,1)}
@@ -516,6 +499,42 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
   .cal-nav .btn{padding:6px 10px}
 }
 
+/* ===== Smooth scrolling. Anything that blurs or glows has to be redrawn as the page moves, so keep it off things
+   that stay on screen while you scroll, and turn the glows off entirely on touch screens. ===== */
+.dock-btn.glassy{-webkit-backdrop-filter:none;backdrop-filter:none;
+  background:linear-gradient(140deg,rgba(255,255,255,.14),rgba(255,255,255,.03) 50%),var(--sheet-bg)}
+@media (hover:none){
+  /* Touch screens fire :hover on tap; don't let tiles jump while your finger is scrolling. */
+  .day:hover,.skin-card:hover,.dock-btn:hover,.panel.tap:active{transform:none}
+  .panel.tap:hover,.day:hover{box-shadow:none}
+}
+
+/* ===== Spotlight: glows and looping animations run only on what's in the middle of the screen.
+   The script marks panels crossing the centre band with .lit; everything else stays flat and still. ===== */
+.stat .v,.stat .v.goldc,.stat .v.pos,.stat .v.neg,.hero .net,.gauge .in b,.date-badge b{text-shadow:none;transition:text-shadow .5s ease}
+.bar>i,.bar.gold>i,.day.hit,.gauge{box-shadow:none;transition:box-shadow .5s ease}
+.panel,.goal{transition:border-color .5s ease,box-shadow .5s ease}
+.panel::before,.panel::after,.goal::before,.goal::after{opacity:.4;transition:opacity .5s ease}
+.panel.lit::before,.panel.lit::after,.goal.lit::before,.goal.lit::after{opacity:1}
+:root .panel.lit,:root .goal.lit{border-color:var(--line-hi);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 26px rgba(var(--acc-rgb),.14)}
+:root[data-skin="vault"] .panel.lit,:root[data-skin="vault"] .goal.lit{box-shadow:inset 0 0 0 4px rgba(2,16,10,.55),inset 0 0 0 5px rgba(var(--acc-rgb),.22),0 0 26px rgba(var(--acc-rgb),.14)}
+:root[data-skin="platinum"] .panel.lit,:root[data-skin="platinum"] .goal.lit{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 26px rgba(122,162,255,.18)}
+.lit .v,.lit.stat .v,.lit .net,.lit .gauge .in b{text-shadow:0 0 18px rgba(var(--acc-rgb),.4)}
+.lit .v.pos,.lit.stat .v.pos,.lit .net.pos{text-shadow:0 0 18px color-mix(in srgb,var(--good) 45%,transparent)}
+.lit .v.neg,.lit.stat .v.neg,.lit .net.neg{text-shadow:0 0 18px color-mix(in srgb,var(--bad) 45%,transparent)}
+.lit .v.goldc,.lit.stat .v.goldc{text-shadow:0 0 18px color-mix(in srgb,var(--gold) 45%,transparent)}
+.lit .date-badge b{text-shadow:0 0 10px rgba(var(--acc-rgb),.5)}
+.lit .bar>i{box-shadow:0 0 12px rgba(var(--acc-rgb),.6)}
+.lit .bar.over>i{box-shadow:0 0 12px color-mix(in srgb,var(--bad) 55%,transparent)}
+.lit .day.hit{box-shadow:0 0 14px color-mix(in srgb,var(--good) 30%,transparent)}
+.lit .gauge{box-shadow:0 0 40px rgba(var(--acc-rgb),.25)}
+:root[data-skin="platinum"] .lit .v,:root[data-skin="platinum"] .lit.stat .v{text-shadow:none}
+.gauge::before,.reactor{animation:none}
+@media (prefers-reduced-motion: no-preference){
+  .lit .gauge::before{animation:spin 40s linear infinite}
+  .reactor.lit{animation:pulse 3.2s ease-in-out infinite}
+}
+
 /* ===== Tab transitions. Only opacity and transform are animated, which phones run on the GPU without repainting.
    The old page slips out (.leave), then the new page's blocks cascade in (.enter). Each skin has its own direction. ===== */
 :root[data-dir="back"]{--sx:-1}
@@ -563,7 +582,7 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
     </nav>
     <div class="foot">Market data: Alpha Vantage. Exchange rates: Frankfurter. Both found via the public-apis list.</div>
   </div>
-  <button class="dock-btn glassy" id="menuBtn" aria-expanded="false" aria-controls="menu"><span class="burger" aria-hidden="true"></span><span id="dockLabel">Overview</span></button>
+  <button class="dock-btn glassy" id="menuBtn" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span class="burger" aria-hidden="true"></span><span id="dockLabel" aria-hidden="true">Overview</span></button>
 </div>
 <div class="glass" id="glass" hidden>
   <div class="glass-back" data-gclose></div>
@@ -571,7 +590,7 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 </div>
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-back" data-close></div>
-  <div class="panel sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+  <div class="panel sheet-card lit" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
     <div class="panel-head"><h3 id="sheet-title"></h3><button class="btn" data-close>Close</button></div>
     <div id="sheet-body" style="display:flex;flex-direction:column;gap:22px"></div>
   </div>
@@ -1648,9 +1667,9 @@ async function loadPhone(){
 const views = { overview:viewOverview, budget:viewBudget, debt:viewDebt, goals:viewGoals, assets:viewAssets, invest:viewInvest, hustle:viewHustle, setup:viewSettings };
 function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
 const SKINS = {
-  stark:    { name:"Stark Gold",    tag:"Onyx, gold and emerald on a heads-up grid. Pages scan in.", meta:"#050605" },
-  vault:    { name:"Emerald Vault", tag:"Private-bank green, champagne gold and art-deco fans. Pages fade in like a vault door.", meta:"#03140d" },
-  platinum: { name:"Black Card",    tag:"Platinum, sapphire and rose gold on banknote engraving. Pages glide sideways.", meta:"#06070c" }
+  stark:    { name:"Stark Gold",    tag:"Onyx black with gold and emerald. Pages rise in.", meta:"#050605" },
+  vault:    { name:"Emerald Vault", tag:"Deep private-bank green with champagne gold. Pages settle in like a vault door.", meta:"#03140d" },
+  platinum: { name:"Black Card",    tag:"Midnight with platinum, sapphire and rose gold. Pages glide sideways.", meta:"#06070c" }
 };
 const ORDER = ["overview","budget","debt","goals","assets","invest","hustle","setup"];
 const reduceMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
@@ -1689,6 +1708,23 @@ function openMenu(){ const m = document.getElementById("menu"); m.hidden = false
   (m.querySelector("[aria-current]") || m.querySelector("a")).focus({ preventScroll:true }); }
 function closeMenu(focusBtn){ const m = document.getElementById("menu"); if (m.hidden) return; m.hidden = true;
   const b = document.getElementById("menuBtn"); b.setAttribute("aria-expanded", "false"); if (focusBtn) b.focus(); }
+/* Spotlight: watch a band across the middle of the screen. Panels (and the logo) inside it get .lit, which turns on
+   their glow and looping animation; as they scroll out of the band the effects switch off again. */
+const litObs = "IntersectionObserver" in window
+  ? new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle("lit", e.isIntersecting)), { rootMargin:"-38% 0px -38% 0px" })
+  : null;
+function spotlight(){
+  const els = document.querySelectorAll("#view .panel, #view .goal, .topline .reactor");
+  if (!litObs){ els.forEach(el => el.classList.add("lit")); return; }
+  litObs.disconnect(); els.forEach(el => litObs.observe(el));
+}
+/* Menu button: show the tab name for 3 seconds after each page change, then fold back to just the menu lines. */
+let dockTimer;
+function flashDockLabel(){
+  const b = document.getElementById("menuBtn");
+  clearTimeout(dockTimer); b.classList.remove("collapsed");
+  dockTimer = setTimeout(() => b.classList.add("collapsed"), 3000);
+}
 function render(){
   const r = route();
   normalize(); applySkin();
@@ -1707,7 +1743,9 @@ function render(){
     if (changed) enterTimer = setTimeout(() => v.classList.remove("enter"), 900);
     if (fk && !changed){ const n = v.querySelector(fk);
       if (n){ if (typed !== null) n.value = typed; n.focus({ preventScroll:true }); try { if (s0 !== null) n.setSelectionRange(s0, s1); } catch(_){} } }
+    spotlight();
   }
+  if (changed) flashDockLabel();
   lastHTML = html;
   hud();
   if (r === "setup") loadPhone();
@@ -1731,7 +1769,11 @@ function hud(){
     `<span class="clock" id="clock"></span>`;
   tick();
 }
-function tick(){ const c = document.getElementById("clock"); if (c) c.textContent = new Date().toLocaleString(undefined, {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit", second:"2-digit"}); }
+/* Phones show minutes only: changing text re-lays-out the page, and doing that every second can catch a scroll mid-swipe. */
+const touchScreen = window.matchMedia ? matchMedia("(hover: none)").matches : false;
+function tick(){ const c = document.getElementById("clock"); if (!c) return;
+  const s = new Date().toLocaleString(undefined, {weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit", second: touchScreen ? undefined : "2-digit"});
+  if (c.textContent !== s) c.textContent = s; }
 setInterval(tick, 1000);
 window.addEventListener("hashchange", () => {
   closeMenu();
