@@ -13,6 +13,10 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<script>
+/* Apply the saved skin before anything is drawn, so the splash screen opens in your colours. */
+try { var _s = JSON.parse(localStorage.getItem("freedomLedger.v1") || "{}"); if (_s.settings && _s.settings.skin) document.documentElement.dataset.skin = _s.settings.skin; } catch (e) {}
+</script>
 <style>
 /* Layout: a heads-up display. Command rail on the left (top tabs on phones), glass instrument panels on a faint targeting grid.
    Deliberately single-theme: wealth colours. Onyx ground, ivory text, gold as the primary glow, deep emerald for growth. */
@@ -475,6 +479,32 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 @keyframes fadeIn{from{opacity:0}}
 @keyframes glassIn{from{opacity:0;transform:translateY(24px) scale(.94)}}
 
+/* ===== Splash screen while the app loads ===== */
+.splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--bg);
+  padding:env(safe-area-inset-top, 0px) 24px env(safe-area-inset-bottom, 0px);transition:opacity .6s ease,transform .7s cubic-bezier(.6,0,.2,1)}
+.splash.out{opacity:0;transform:scale(1.06);pointer-events:none}
+.splash-core{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;width:min(300px,100%)}
+.splash-logo{position:relative;width:128px;height:128px;display:grid;place-items:center;margin-bottom:10px}
+.splash-logo .reactor{width:76px;height:76px;flex:none;filter:drop-shadow(0 0 18px rgba(var(--acc-rgb),.75))}
+.splash .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(var(--acc-rgb),.35)}
+.splash .r1{border-style:dashed;border-color:rgba(var(--acc-rgb),.5)}
+.splash .r2{inset:12px;border-color:transparent;border-top-color:var(--accent);border-right-color:rgba(var(--acc-rgb),.4)}
+.splash-name{font-family:var(--display);font-weight:700;font-size:1.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);
+  background:linear-gradient(90deg,var(--ink) 30%,var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.splash-tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);opacity:.8;margin-top:-8px}
+.splash-track{width:100%;height:3px;margin-top:18px;border-radius:99px;background:rgba(var(--acc-rgb),.12);overflow:hidden}
+.splash-track i{display:block;height:100%;width:5%;border-radius:99px;background:var(--fill);box-shadow:0 0 10px rgba(var(--acc-rgb),.6);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.splash-msg{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);min-height:1.2em}
+@media (prefers-reduced-motion: no-preference){
+  .splash .r1{animation:spin 14s linear infinite}
+  .splash .r2{animation:spin 1.6s cubic-bezier(.5,.1,.5,.9) infinite}
+  .splash .reactor{animation:pulse 2.4s ease-in-out infinite}
+  .splash-core>*{animation:splashIn .7s cubic-bezier(.2,.8,.2,1) backwards}
+  .splash-core>:nth-child(2){animation-delay:.12s} .splash-core>:nth-child(3){animation-delay:.2s} .splash-core>:nth-child(n+4){animation-delay:.3s}
+}
+@keyframes splashIn{from{opacity:0;transform:translateY(12px)}}
+@media (prefers-reduced-motion: reduce){ .splash{transition:none} }
+
 /* Overview / detail switch at the top of Budget, Debt, Hustle, Goals and Assets */
 .subnav{align-self:flex-start}
 
@@ -634,6 +664,15 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 </style>
 </head>
 <body>
+<div class="splash" id="splash" role="status" aria-label="Freedom Ledger is loading">
+  <div class="splash-core">
+    <div class="splash-logo" aria-hidden="true"><i class="ring r1"></i><i class="ring r2"></i><span class="reactor"></span></div>
+    <div class="splash-name">Freedom Ledger</div>
+    <div class="splash-tag">Wealth command</div>
+    <div class="splash-track"><i id="splashBar"></i></div>
+    <div class="splash-msg" id="splashMsg" aria-live="polite">Opening your ledger</div>
+  </div>
+</div>
 <div class="app">
   <main>
     <div class="topline" id="topline"><a class="brand" href="#overview" aria-label="Freedom Ledger, go to Overview"><span class="reactor" aria-hidden="true"></span><div class="brand-name" aria-hidden="true"><h1>Freedom Ledger</h1><small>Wealth command</small></div></a>
@@ -1994,8 +2033,8 @@ function keyOf(el){
 function skinKey(){ return SKINS[S.settings.skin] ? S.settings.skin : "stark"; }
 function applySkin(){
   const k = skinKey(), root = document.documentElement;
-  if (root.dataset.skin === k) return;
-  root.dataset.skin = k;
+  if (applySkin.done === k) return;
+  applySkin.done = k; root.dataset.skin = k;
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = SKINS[k].meta;
 }
 function setSkin(k, ev){
@@ -2201,24 +2240,58 @@ view.addEventListener("click", async e => {
   }
 });
 
-/* first load: use cached data, fetch what's missing quietly */
-deepLink();
-render();
-/* Show the name for 3 seconds, then fold it into the logo and leave the rate and time beside it. */
-setTimeout(() => document.getElementById("topline").classList.add("collapsed"), 3000);
-/* Installable phone app: cache the app so it opens with no connection. */
-if (MODE === "pwa" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-window.addEventListener("online", () => { hud(); });
-window.addEventListener("offline", () => { hud(); });
-if (MODE === "online") cloudInit();
-else (async () => {
-  await pull();
-  await fxRate();
+/* ---------- Start-up: the splash screen stays up while data loads, then hands over to the first page ---------- */
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const within = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), wait(ms)]);   // never let one slow step hold the app hostage
+function bootStep(pct, msg){
+  const bar = document.getElementById("splashBar"), txt = document.getElementById("splashMsg");
+  if (bar) bar.style.width = pct + "%";
+  if (txt && msg) txt.textContent = msg;
+}
+async function finishBoot(){
+  const sp = document.getElementById("splash"); if (!sp || sp.classList.contains("out")) return;
+  bootStep(100, "Ready");
+  await wait(reduceMotion.matches ? 0 : 350);
+  lastRoute = null; render();                 // replay the first page's entrance as the splash lifts
+  sp.classList.add("out");
+  setTimeout(() => { sp.remove(); }, reduceMotion.matches ? 0 : 700);
+  /* Show the name for 3 seconds, then fold it into the logo and leave the rate and time beside it. */
+  setTimeout(() => document.getElementById("topline").classList.add("collapsed"), 3000);
+}
+const marketLoad = async () => {
   for (const h of S.holdings.filter(h => h.symbol)){
     for (const fn of ["GLOBAL_QUOTE", "DIVIDENDS"]) if (!cached(fn, h.symbol)) { try { await av(fn, h.symbol); } catch(e){ mktErr = e.message; } }
   }
   render();
+};
+(async () => {
+  const started = Date.now();
+  bootStep(15, "Opening your ledger");
+  deepLink();
+  render();
+  bootStep(35, "Building your pages");
+  await within(document.fonts && document.fonts.ready, 1500);
+  if (MODE === "online"){
+    bootStep(55, "Connecting to your Claude account");
+    cloudInit();
+    for (let i = 0; i < 30 && sync === "connecting"; i++) await wait(100);   // up to 3 seconds for the first sync
+  } else {
+    bootStep(55, SERVER ? "Syncing with your PC" : "Loading your numbers");
+    await within(pull(), 3000);
+    bootStep(75, "Fetching exchange rate");
+    await within(fxRate(), 2500);
+    bootStep(90, "Fetching market data");
+    await within(marketLoad(), 3000);           // keeps going in the background if it takes longer
+  }
+  const min = reduceMotion.matches ? 0 : 1400 - (Date.now() - started);
+  if (min > 0) await wait(min);                 // long enough to see, short enough not to annoy
+  finishBoot();
 })();
+setTimeout(finishBoot, 9000);                   // safety net: the app always opens
+/* Installable phone app: cache the app so it opens with no connection. */
+if (MODE === "pwa" && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+window.addEventListener("online", () => { hud(); });
+window.addEventListener("offline", () => { hud(); });
 </script>
 </body>
 </html>
