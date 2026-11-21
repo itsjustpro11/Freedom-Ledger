@@ -555,10 +555,17 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 .pad-keys button:active{background:rgba(255,255,255,.18)}
 .pad-enter{height:54px;justify-content:center;border-radius:16px!important;clip-path:none!important;font-size:1rem!important}
 /* Step two after Enter: what the amount was for */
-.pad-note{display:none;flex-direction:column;gap:12px}
-.pad.noting .pad-note{display:flex}
-.pad.noting .pad-keys,.pad.noting .pad-enter,.pad.noting .pad-mode{display:none}
-.pad.noting .pad-head{justify-content:flex-end}
+/* Both steps stay in the page so the description box can take focus in the same tap as Enter (iOS only opens the
+   keyboard that way). The keys fade and drop away, the card eases to its new height, and the box rises in. */
+.pad{transition:padding-bottom .25s ease}
+.pad-step1{display:flex;flex-direction:column;gap:12px;transition:opacity .2s ease,transform .38s cubic-bezier(.2,.8,.2,1)}
+.pad-note{display:flex;flex-direction:column;gap:12px;position:absolute;left:18px;right:18px;bottom:max(18px, env(safe-area-inset-bottom, 0px));
+  opacity:0;transform:translateY(28px);pointer-events:none;transition:opacity .32s ease .1s,transform .5s cubic-bezier(.2,.9,.25,1.05) .06s}
+.pad.noting .pad-note{position:relative;left:auto;right:auto;bottom:auto;opacity:1;transform:none;pointer-events:auto}
+.pad.noting .pad-step1{position:absolute;left:18px;right:18px;opacity:0;transform:translateY(26px) scale(.96);pointer-events:none}
+.pad-mode{transition:opacity .25s ease}
+.pad.noting .pad-mode{opacity:0;pointer-events:none}
+@media (prefers-reduced-motion: reduce){ .pad,.pad-step1,.pad-note,.pad-mode{transition:none} }
 @media (prefers-reduced-motion: no-preference){ .pad.noting .pad-note{animation:fadeIn .3s ease both} }
 .tx-list{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
 .tx-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:.9rem}
@@ -734,13 +741,15 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
     <div class="pad-title" id="padTitle">Add to today</div>
     <div class="pad-amt" id="padAmt" aria-live="polite">0</div>
     <div class="pad-sub" id="padSub"></div>
-    <div class="pad-keys">
-      <button data-pk="1">1</button><button data-pk="2">2</button><button data-pk="3">3</button>
-      <button data-pk="4">4</button><button data-pk="5">5</button><button data-pk="6">6</button>
-      <button data-pk="7">7</button><button data-pk="8">8</button><button data-pk="9">9</button>
-      <button data-pk=".">.</button><button data-pk="0">0</button><button data-pk="back" aria-label="Delete">⌫</button>
+    <div class="pad-step1">
+      <div class="pad-keys">
+        <button data-pk="1">1</button><button data-pk="2">2</button><button data-pk="3">3</button>
+        <button data-pk="4">4</button><button data-pk="5">5</button><button data-pk="6">6</button>
+        <button data-pk="7">7</button><button data-pk="8">8</button><button data-pk="9">9</button>
+        <button data-pk=".">.</button><button data-pk="0">0</button><button data-pk="back" aria-label="Delete">⌫</button>
+      </div>
+      <button class="btn primary pad-enter" data-pk="enter">Enter</button>
     </div>
-    <button class="btn primary pad-enter" data-pk="enter">Enter</button>
     <div class="pad-note">
       <label class="g-field">What was it for?<input id="padNoteIn" maxlength="120" autocomplete="off" placeholder="e.g. Sold 3 cakes, Uber trip, fuel"></label>
       <div class="g-foot"><button class="btn" data-pnote="skip">Skip</button><button class="btn primary" data-pnote="save">Save</button></div>
@@ -1798,13 +1807,42 @@ function openPad(mode){
   if (p.hidden){ closeMenu(); p.hidden = false; document.body.style.overflow = "hidden"; }
   padShow(); p.querySelector(".pad-card").focus({ preventScroll:true });
 }
-function closePad(){ const p = document.getElementById("pad"); if (p.hidden) return;
-  p.hidden = true; document.body.style.overflow = ""; setQuick(false); document.getElementById("qMain").focus({ preventScroll:true }); }
+let padClosing = false;
+function closePad(){
+  const p = document.getElementById("pad"); if (p.hidden || padClosing) return;
+  const done = () => { padClosing = false; p.hidden = true; p.style.paddingBottom = ""; document.body.style.overflow = "";
+    setQuick(false); document.getElementById("qMain").focus({ preventScroll:true }); };
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // lowers the iPhone keyboard
+  const card = p.querySelector(".pad-card");
+  if (reduceMotion.matches || !card.animate) return done();
+  padClosing = true;   // slide the sheet back down, then hide it
+  card.animate([{ transform:"translateY(0)" }, { transform:"translateY(105%)" }], { duration:320, easing:"cubic-bezier(.5,0,.75,0)", fill:"forwards" });
+  let finished = false;
+  const fin = () => { if (finished) return; finished = true; p.getAnimations({ subtree:true }).forEach(a => a.cancel()); done(); };
+  p.querySelector(".pad-back").animate([{ opacity:1 }, { opacity:0 }], { duration:320, fill:"forwards" }).onfinish = fin;
+  setTimeout(fin, 450);   // in case the browser skips frames (app in the background)
+}
+/* Step one → step two: measure the card, swap steps, then ease the card's height between the two. */
+function toNoteStep(){
+  const p = document.getElementById("pad"), card = p.querySelector(".pad-card"), input = document.getElementById("padNoteIn");
+  input.focus({ preventScroll:true });                // same tap as Enter, so iOS opens the keyboard
+  const h0 = card.getBoundingClientRect().height;
+  padStage = "note"; padShow();
+  if (reduceMotion.matches || !card.animate) return;
+  const h1 = card.getBoundingClientRect().height;
+  card.style.overflow = "hidden";
+  card.animate([{ height:h0 + "px" }, { height:h1 + "px" }], { duration:460, easing:"cubic-bezier(.2,.8,.2,1)" });
+  setTimeout(() => { card.style.overflow = ""; }, 500);
+  document.getElementById("padAmt").animate([{ transform:"scale(1)" }, { transform:"scale(1.08)" }, { transform:"scale(1)" }], { duration:460, easing:"ease-out" });
+}
+/* Keep the sheet above the iPhone keyboard. */
+function padKb(){ const p = document.getElementById("pad"); if (p.hidden || !window.visualViewport) return;
+  const vv = window.visualViewport; p.style.paddingBottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + "px"; }
+if (window.visualViewport){ visualViewport.addEventListener("resize", padKb); visualViewport.addEventListener("scroll", padKb); }
 function padKey(k){
   if (k === "enter"){ const v = num(padStr);
     if (!(v > 0)) return closePad();
-    padStage = "note"; padShow();                     // step two: ask what it was for
-    setTimeout(() => document.getElementById("padNoteIn").focus(), 60);
+    toNoteStep();                                      // step two: ask what it was for
     return; }
   if (k === "back") padStr = padStr.slice(0, -1);
   else if (k === "."){ if (!padStr.includes(".")) padStr = (padStr || "0") + "."; }
