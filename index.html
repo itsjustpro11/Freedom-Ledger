@@ -392,7 +392,20 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
 .readout .ro-link{text-align:left}
 .chip .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:1px}
 .chip .dot.off{background:var(--warn)}
-.menu .nav a:nth-child(9){animation-delay:.24s}
+.menu .nav a:nth-child(9){animation-delay:.24s} .menu .nav a:nth-child(10){animation-delay:.27s}
+
+/* Printing the month-end statement (Save as PDF): light paper colours, no app chrome */
+@media print{
+  :root,:root[data-skin]{--bg:#fff!important;--ink:#111!important;--muted:#555!important;--surface:#fff!important;--sunk:#f5f5f5!important;--line:#ccc!important;--line-hi:#999!important;--accent:#8a6a1f!important;--good:#0b7a4b!important;--bad:#b3261e!important;--gold:#8a6a1f!important}
+  body{background:#fff!important;color:#111}
+  .dock,.topline,.toast,.subnav,.no-print,.splash,.sheet,.glass,.pad{display:none!important}
+  main{padding:0!important}
+  h2{background:none!important;color:#111!important;-webkit-text-fill-color:#111!important}
+  .panel,.goal{box-shadow:none!important;break-inside:avoid;border-color:#ccc!important}
+  .panel::before,.panel::after,.goal::before,.goal::after{display:none!important}
+  *{text-shadow:none!important;animation:none!important;transition:none!important}
+  .gauge::before{display:none}
+}
 
 /* Top bar: logo and name on load; the name then folds into the logo and the rate and time are left beside it. */
 .topline{justify-content:flex-start;gap:0;margin-bottom:22px;min-height:44px}
@@ -683,6 +696,7 @@ main{padding-bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 96px)!imp
   <div class="menu glassy" id="menu" hidden>
     <nav class="nav" id="nav" aria-label="Sections">
       <a href="#overview" data-label="Overview"><span class="ic" aria-hidden="true">◉</span>Overview</a>
+      <a href="#statement" data-label="Statement"><span class="ic" aria-hidden="true">▣</span>Month-end statement</a>
       <a href="#budget" data-label="Budget"><span class="ic" aria-hidden="true">▤</span>Budget</a>
       <a href="#debt" data-label="Debt payoff"><span class="ic" aria-hidden="true">↘</span>Debt payoff</a>
       <a href="#hustle" data-label="Hustle"><span class="ic" aria-hidden="true">✦</span>Hustle</a>
@@ -777,6 +791,7 @@ function sampleState(){
         {id:uid(), date:y+"-10-15", amount:200, note:""} ]}
     ],
     holdings: [ {id:uid(), symbol:"IBM", shares:10} ],
+    snaps: [ { d:(() => { const d = new Date(); d.setDate(d.getDate() - 30); return ymd(d); })(), debt:30350, portZ:null, assets:101400, goals:1250, cur:"USD" } ],
     assets: [
       {id:uid(), name:"Rental flat", type:"Property", cost:85000, value:98000, monthly:650},
       {id:uid(), name:"Delivery motorbike", type:"Vehicle", cost:3200, value:2600, monthly:400},
@@ -798,6 +813,18 @@ function normalize(){
   if (!S.hustle || typeof S.hustle !== "object") S.hustle = { target:0, days:{} };
   if (!S.hustle.days || typeof S.hustle.days !== "object") S.hustle.days = {};
   if (DEFAULT_AV_KEY && (!S.settings.avKey || S.settings.avKey === "demo")) S.settings.avKey = DEFAULT_AV_KEY;
+  if (!Array.isArray(S.watch)) S.watch = [];
+  if (!Array.isArray(S.snaps)) S.snaps = [];
+}
+/* One snapshot a day of what you owe and own, so the month-end statement can show real 30-day changes. */
+function snapshot(){
+  try {
+    normalize();
+    const d = todayISO(), A = assetTotals();
+    const snap = { d, debt: sum(S.debts, x => x.balance), portZ: portfolioZar(), assets: A.value,
+      goals: sum(S.goals, g => goalStats(g).saved), cur: S.settings.currency };
+    S.snaps = S.snaps.filter(s => s.d !== d).concat(snap).sort((a, b) => a.d.localeCompare(b.d)).slice(-400);
+  } catch(e){}
 }
 function load(){ try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch(e){} return sampleState(); }
 let S = load();
@@ -808,6 +835,7 @@ let syncKey = qs.get("k") || (() => { try { return localStorage.getItem("freedom
 try { if (qs.get("k")) localStorage.setItem("freedomLedger.key", qs.get("k")); } catch(e){}
 let sync = SERVER || MODE === "online" ? "connecting" : "local", pushTimer = null;
 function save(){
+  snapshot();
   S.updatedAt = Date.now();
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
   if (SERVER && sync !== "denied"){ clearTimeout(pushTimer); pushTimer = setTimeout(push, 500); }
@@ -907,7 +935,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const sum = (a, f) => a.reduce((t, x) => t + num(f(x)), 0);
 function money(v, cur, dp){ cur = cur || S.settings.currency;
-  try { return new Intl.NumberFormat(undefined, {style:"currency", currency:cur, maximumFractionDigits: dp ?? (Math.abs(v) < 100 ? 2 : 0)}).format(v); }
+  try { return new Intl.NumberFormat(undefined, {style:"currency", currency:cur, currencyDisplay: cur === "ZAR" ? "narrowSymbol" : "symbol", maximumFractionDigits: dp ?? (Math.abs(v) < 100 ? 2 : 0)}).format(v); }
   catch(e){ return cur + " " + Number(v).toFixed(2); } }
 const pct = v => (isFinite(v) ? v : 0).toFixed(1) + "%";
 function fmtDate(iso, opts){ if (!iso) return "—"; const d = new Date(iso + "T00:00:00"); return isNaN(d) ? "—" : d.toLocaleDateString(undefined, opts || {day:"numeric", month:"short", year:"numeric"}); }
@@ -986,14 +1014,35 @@ async function av(fn, symbol, force){
 const cached = (fn, s) => C[fn + ":" + s.toUpperCase()]?.d;
 
 async function fxRate(){
-  const cur = S.settings.currency; if (cur === "USD") return 1;
-  const k = "fx:USD:" + cur;
+  /* Always keep USD→ZAR too: the Invest page shows everything in rand. */
+  const cur = S.settings.currency;
   if (MODE === "online") return fxCached();
-  if (C[k] && Date.now() - C[k].t < TTL) return C[k].d;
-  try { const r = await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=" + cur); const j = await r.json();
-    const rate = j.rates?.[cur]; if (rate){ C[k] = {t:Date.now(), d:rate}; saveCache(); return rate; } } catch(e){}
-  return C[k]?.d || null;
+  const need = [...new Set([cur, "ZAR"])].filter(c => c !== "USD" && !(C["fx:USD:" + c] && Date.now() - C["fx:USD:" + c].t < TTL));
+  if (need.length){
+    try { const r = await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=" + need.join(",")); const j = await r.json();
+      need.forEach(c => { if (j.rates?.[c]) C["fx:USD:" + c] = { t:Date.now(), d:j.rates[c] }; }); saveCache(); } catch(e){}
+  }
+  return cur === "USD" ? 1 : (C["fx:USD:" + cur]?.d || null);
 }
+/* ---------- rand for investments: JSE shares are priced in rand, US shares in dollars and converted ---------- */
+function usdZar(){ return S.settings.currency === "ZAR" ? fxCached() : (C["fx:USD:ZAR"]?.d || null); }
+function mktOf(sym){
+  const s = String(sym || "").toUpperCase();
+  const h = S.holdings.find(x => (x.symbol || "").toUpperCase() === s) || (S.watch || []).find(x => (x.symbol || "").toUpperCase() === s);
+  return h ? (h.market === "JSE" ? "JSE" : "US") : "US";
+}
+const curOfSym = sym => mktOf(sym) === "JSE" ? "ZAR" : "USD";
+function conv(v, from, to){ if (v === null || v === undefined) return null; if (from === to) return v; const r = usdZar(); if (!r) return null; return from === "USD" ? v * r : v / r; }
+const toZar = (v, from) => conv(v, from, "ZAR");
+function zarToHome(v){ if (v === null || v === undefined) return null; const cur = S.settings.currency; if (cur === "ZAR") return v; const r = usdZar(), f = fxCached(); return r && f ? v / r * f : null; }
+const R = (v, dp) => v === null || v === undefined ? "—" : money(v, "ZAR", dp);
+function holdingInfo(h){
+  const cur = curOfSym(h.symbol), sh = num(h.shares), q = priceOf(h.symbol), p = divProfile(h.symbol);
+  return { cur, sh, q, p, priceZ: q ? toZar(q.price, cur) : null, valueZ: q ? toZar(q.price * sh, cur) : null,
+    ttmZ: p ? toZar(p.ttm * sh, cur) : null, yieldPct: q && p && q.price ? p.ttm / q.price * 100 : null };
+}
+const portfolioZar = () => sum(S.holdings, h => holdingInfo(h).valueZ || 0);
+const divYearZar = () => sum(S.holdings, h => holdingInfo(h).ttmZ || 0);
 function fxCached(){
   if (S.settings.currency === "USD") return 1;
   const live = C["fx:USD:" + S.settings.currency]?.d || null, manual = num(S.settings.manualFx) || null;
@@ -1001,15 +1050,17 @@ function fxCached(){
 }
 
 function priceOf(sym){
-  const q = cached("GLOBAL_QUOTE", sym)?.["Global Quote"];
+  /* JSE shares aren't on Alpha Vantage, so they always use the price you type in (rand). */
+  const q = mktOf(sym) === "JSE" ? null : cached("GLOBAL_QUOTE", sym)?.["Global Quote"];
   if (q && q["05. price"]) return { price: num(q["05. price"]), change: q["10. change percent"] };
-  const h = S.holdings.find(x => (x.symbol || "").toUpperCase() === String(sym).toUpperCase() && num(x.price) > 0);
+  const s = String(sym).toUpperCase(), h = S.holdings.concat(S.watch || []).find(x => (x.symbol || "").toUpperCase() === s && num(x.price) > 0);
   return h ? { price: num(h.price), change: null, manual: true } : null;
 }
 function divsOf(sym){
-  const d = cached("DIVIDENDS", sym)?.data;
+  const native = curOfSym(sym);
+  const d = native === "ZAR" ? null : cached("DIVIDENDS", sym)?.data;
   const man = (S.manualDivs || []).filter(x => (x.sym || "").toUpperCase() === String(sym).toUpperCase() && x.ex)
-    .map(x => ({ ex:x.ex, pay:x.pay || null, decl:null, amount:num(x.amount), manual:true }));
+    .map(x => { const a = num(x.amount), c = x.cur || "USD", v = conv(a, c, native); return { ex:x.ex, pay:x.pay || null, decl:null, amount: v === null ? a : v, manual:true }; });
   if (!Array.isArray(d) && !man.length) return null;
   const api = (Array.isArray(d) ? d : []).map(x => ({ ex: x.ex_dividend_date !== "None" ? x.ex_dividend_date : null, pay: x.payment_date !== "None" ? x.payment_date : null,
     decl: x.declaration_date !== "None" ? x.declaration_date : null, amount: num(x.amount) })).filter(x => x.ex);
@@ -1071,10 +1122,10 @@ function viewOverview(){
   const goals = S.goals.map(g => ({g, s:goalStats(g)}));
   const gSaved = sum(goals, x => x.s.saved), gTarget = sum(goals, x => x.s.target);
   const fx = fxCached();
-  const annualDiv = sum(S.holdings, h => (divProfile(h.symbol)?.ttm || 0) * num(h.shares));
+  const annualDiv = divYearZar();   // rand
   const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares))).sort((a,b) => (a.pay||a.ex).localeCompare(b.pay||b.ex)).slice(0, 4);
   const debtFree = S.debts.length && !sim.never ? monthLabel(addMonths(sim.months)) : (S.debts.length ? "Not on track" : "Debt-free");
-  const portVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0);
+  const portVal = zarToHome(portfolioZar()) || 0;
   const AT = assetTotals();
   const net = gSaved + portVal + AT.value - t.debtTotal;
   const gp = gTarget ? Math.min(100, gSaved / gTarget * 100) : 0;
@@ -1090,7 +1141,7 @@ function viewOverview(){
       <div class="readout">
         <div class="tap" ${tap("left")}><span>Cash flow / month</span><b class="${t.left >= 0 ? "pos" : "neg"}">${money(t.left)}</b></div>
         <div class="tap" ${tap("debt")}><span>Debt-free</span><b>${esc(debtFree)}</b></div>
-        <div class="tap" ${tap("div")}><span>Dividends / yr</span><b class="goldc">${money(annualDiv, "USD")}</b></div>
+        <div class="tap" ${tap("div")}><span>Dividends / yr</span><b class="goldc">${R(annualDiv)}</b></div>
         ${S.assets.length ? `<a class="ro-link" href="#assets"><span>Assets earn / month</span><b class="pos">${money(AT.monthly)}</b></a>` : ""}
       </div>
     </div>
@@ -1099,7 +1150,7 @@ function viewOverview(){
     <div class="panel stat tap" ${tap("left")}><span class="eyebrow">Left over this month</span><span class="v ${t.left >= 0 ? "pos" : "neg"}">${money(t.left)}</span><span class="s">after budget and debt payments</span></div>
     <div class="panel stat tap" ${tap("debt")}><span class="eyebrow">Total debt</span><span class="v">${money(t.debtTotal)}</span><span class="s">Debt-free: <b>${esc(debtFree)}</b></span></div>
     <div class="panel stat tap" ${tap("goals")}><span class="eyebrow">Saved toward goals</span><span class="v">${money(gSaved)}</span><span class="s">${gTarget ? pct(gSaved/gTarget*100) + " of " + money(gTarget) : "No goals yet"}</span></div>
-    <div class="panel stat tap" ${tap("div")}><span class="eyebrow">Dividend income / yr</span><span class="v goldc">${money(annualDiv, "USD")}</span><span class="s">${fx && S.settings.currency !== "USD" ? "≈ " + money(annualDiv * fx) + " · " : ""}based on last 12 months</span></div>
+    <div class="panel stat tap" ${tap("div")}><span class="eyebrow">Dividend income / yr</span><span class="v goldc">${R(annualDiv)}</span><span class="s">${R(annualDiv / 12)} a month · based on last 12 months</span></div>
   </div>
   <div class="grid g2">
     <div class="panel"><div class="panel-head"><h3>Goals</h3><a href="#goals" class="small">Open goals</a></div>
@@ -1240,28 +1291,31 @@ function viewGoals(){
 
 let busy = false, mktErr = "", lookup = { sym:"", err:"", loading:false };
 function calendarList(ev){
-  const fx = fxCached();
-  return `<div class="cal">${ev.map(e => { const d = new Date((e.pay || e.ex) + "T00:00:00"); const tot = e.amount * (e.shares || 0);
+  return `<div class="cal">${ev.map(e => { const d = new Date((e.pay || e.ex) + "T00:00:00"), cur = curOfSym(e.sym);
+    const per = toZar(e.amount, cur), tot = per === null ? null : per * (e.shares || 0);
     return `<div class="cal-item"><div class="date-badge"><b>${d.getDate()}</b><span>${d.toLocaleDateString(undefined,{month:"short"})}</span></div>
-      <div style="min-width:0"><b>${esc(e.sym)}</b> <span class="muted small">${money(e.amount,"USD",2)} per share</span>
+      <div style="min-width:0"><b>${esc(e.sym)}</b> <span class="chip">${mktOf(e.sym)}</span> <span class="muted small">${per === null ? money(e.amount, cur, 2) : R(per, 2)} per share</span>
       <div class="small muted">Ex-dividend ${fmtDate(e.ex)} · Paid ${fmtDate(e.pay)}</div></div>
-      <div style="text-align:right">${e.shares ? `<div class="num goldc">${money(tot,"USD",2)}</div>${fx && S.settings.currency!=="USD" ? `<div class="small muted num">≈ ${money(tot*fx,undefined,2)}</div>` : ""}` : ""}
+      <div style="text-align:right">${e.shares ? `<div class="num goldc">${R(tot, 2)}</div>` : ""}
       <span class="chip ${e.est ? "" : "gold"}">${e.est ? "Estimated" : "Announced"}</span></div></div>`; }).join("")}</div>`;
 }
 function viewInvest(){
   const st = S.settings, fx = fxCached();
-  const hold = S.holdings.map(h => { const q = priceOf(h.symbol), p = divProfile(h.symbol); const sh = num(h.shares);
-    const val = q ? q.price * sh : null, y = q && p ? p.ttm / q.price * 100 : null;
+  const hold = S.holdings.map(h => { const I = holdingInfo(h), q = I.q, p = I.p, jse = I.cur === "ZAR";
+    const priceCell = q && !q.manual
+      ? `${R(I.priceZ, 2)}<div class="small muted">US$${q.price.toFixed(2)}</div>`
+      : `<input class="cell" type="number" step="any" min="0" data-c="holdings" data-id="${h.id}" data-f="price" value="${num(h.price) || ""}" placeholder="${jse ? "R price" : "US$ price"}" aria-label="Price per share in ${jse ? "rand" : "US dollars"}">`;
     return `<tr><td><input class="cell" style="text-transform:uppercase;font-weight:600" data-c="holdings" data-id="${h.id}" data-f="symbol" value="${esc(h.symbol)}" aria-label="Ticker"></td>
-      <td class="n"><input class="cell" type="number" step="any" data-c="holdings" data-id="${h.id}" data-f="shares" value="${sh}" aria-label="Shares"></td>
-      <td class="n num">${q && !q.manual ? money(q.price,"USD",2) : `<input class="cell" type="number" step="any" data-c="holdings" data-id="${h.id}" data-f="price" value="${num(h.price) || ""}" placeholder="price" aria-label="Price per share in USD">`}</td>
-      <td class="n num">${val !== null ? money(val,"USD") : "—"}</td>
-      <td class="n num">${y !== null ? pct(y) : "—"}</td>
+      <td><select class="cell" data-c="holdings" data-id="${h.id}" data-f="market" aria-label="Market"><option value="JSE" ${jse ? "selected" : ""}>JSE (R)</option><option value="US" ${jse ? "" : "selected"}>US (US$)</option></select></td>
+      <td class="n"><input class="cell" type="number" step="any" min="0" data-c="holdings" data-id="${h.id}" data-f="shares" value="${I.sh}" aria-label="Shares"></td>
+      <td class="n num">${priceCell}</td>
+      <td class="n num">${R(I.valueZ)}</td>
+      <td class="n num">${I.yieldPct !== null ? pct(I.yieldPct) : "—"}</td>
       <td>${p ? `<span class="chip">${p.freq}</span>` : `<span class="muted small">—</span>`}</td>
-      <td class="n num goldc">${p ? money(p.ttm * sh,"USD",2) : "—"}</td>
+      <td class="n num goldc">${R(I.ttmZ, 2)}</td>
       <td><button class="btn ghost" data-act="del" data-c="holdings" data-id="${h.id}" aria-label="Remove">✕</button></td></tr>`; }).join("");
-  const totVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares));
-  const totDiv = sum(S.holdings, h => (divProfile(h.symbol)?.ttm || 0) * num(h.shares));
+  const totVal = portfolioZar();
+  const totDiv = divYearZar();
   const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares))).sort((a,b) => (a.pay||a.ex).localeCompare(b.pay||b.ex));
 
   // growth projection
@@ -1276,29 +1330,30 @@ function viewInvest(){
   if (lookup.sym){ const p = divProfile(lookup.sym), q = priceOf(lookup.sym);
     look = lookup.loading ? `<p class="muted small">Looking up ${esc(lookup.sym)}…</p>` : lookup.err ? `<p class="err">${esc(lookup.err)}</p>` :
       !p ? `<p class="muted small">${esc(lookup.sym)} has no dividend history on Alpha Vantage. It may not pay dividends.</p>` :
-      `<div class="kv"><div>Price<b>${q ? money(q.price,"USD",2) : "—"}</b></div><div>Paid last 12 months<b>${money(p.ttm,"USD",2)}</b></div><div>Yield<b>${q ? pct(p.ttm/q.price*100) : "—"}</b></div><div>Frequency<b>${p.freq}</b></div></div>
+      `<div class="kv"><div>Price<b>${q ? R(toZar(q.price, "USD"), 2) : "—"}</b></div><div>Paid last 12 months<b>${R(toZar(p.ttm, "USD"), 2)}</b></div><div>Yield<b>${q ? pct(p.ttm/q.price*100) : "—"}</b></div><div>Frequency<b>${p.freq}</b></div></div>
        <div class="tbl-wrap"><table><thead><tr><th>Ex-dividend</th><th>Declared</th><th>Paid</th><th class="n">Per share</th></tr></thead><tbody>
-       ${upcomingEvents(lookup.sym, 0).filter(e=>e.est).slice(0,2).map(e => `<tr><td>${fmtDate(e.ex)} <span class="chip">Estimated</span></td><td class="muted">—</td><td>${fmtDate(e.pay)}</td><td class="n num">${money(e.amount,"USD",2)}</td></tr>`).join("")}
-       ${p.history.slice(0,8).map(x => `<tr><td>${fmtDate(x.ex)}</td><td class="muted">${fmtDate(x.decl)}</td><td>${fmtDate(x.pay)}</td><td class="n num">${money(x.amount,"USD",2)}</td></tr>`).join("")}</tbody></table></div>
+       ${upcomingEvents(lookup.sym, 0).filter(e=>e.est).slice(0,2).map(e => `<tr><td>${fmtDate(e.ex)} <span class="chip">Estimated</span></td><td class="muted">—</td><td>${fmtDate(e.pay)}</td><td class="n num">${R(toZar(e.amount, "USD"), 2)}</td></tr>`).join("")}
+       ${p.history.slice(0,8).map(x => `<tr><td>${fmtDate(x.ex)}</td><td class="muted">${fmtDate(x.decl)}</td><td>${fmtDate(x.pay)}</td><td class="n num">${R(toZar(x.amount, "USD"), 2)}</td></tr>`).join("")}</tbody></table></div>
        <div><button class="btn" data-act="addLookup">+ Add ${esc(lookup.sym)} to my holdings</button></div>`; }
 
   return `
   <div class="page-head"><div><div class="eyebrow">Invest &amp; dividends</div><h2>Shares that pay you</h2>
-  <p>Track dividend-paying shares, see when the next payments land, and project how monthly investing grows. Prices are in US dollars from Alpha Vantage.</p></div>
+  <p>Track dividend-paying shares on the JSE and in the US, see when the next payments land, and project how monthly investing grows. Everything here is in rand.${usdZar() ? ` US prices convert at 1 US$ = ${R(usdZar(), 2)}.` : ""}</p></div>
   ${MODE === "online" ? "" : `<button class="btn primary" data-act="refresh" ${busy?"disabled":""}>${busy ? "Refreshing…" : "Refresh market data"}</button>`}</div>
   ${MODE === "online" ? `<div class="banner"><span><b>Online version.</b> Live prices and new dividend dates come from the PC version. To bring them here, press <b>Copy backup</b> on the PC version's Setup page, then paste it into <b>Restore</b> on this Setup page. You can also type prices and dividend dates in yourself.</span><a class="btn" href="#setup">Open setup</a></div>` : (st.avKey||"demo") === "demo" ?`<div class="banner"><span>You're using Alpha Vantage's demo key, which only returns data for <b>IBM</b>. Get a free key (25 lookups a day) at <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener">alphavantage.co</a>, then paste it in Settings.</span><a class="btn" href="#setup">Open settings</a></div>` : ""}
   ${mktErr ? `<p class="err">${esc(mktErr)}</p>` : ""}
   <div class="grid g4">
-    <div class="panel stat"><span class="eyebrow">Portfolio value</span><span class="v">${money(totVal,"USD")}</span><span class="s">${fx && st.currency!=="USD" ? "≈ " + money(totVal*fx) : "latest prices"}</span></div>
-    <div class="panel stat tap" ${tap("div")}><span class="eyebrow">Dividends / year</span><span class="v goldc">${money(totDiv,"USD")}</span><span class="s">${money(totDiv/12,"USD",2)} a month on average</span></div>
+    <div class="panel stat"><span class="eyebrow">Portfolio value</span><span class="v">${R(totVal)}</span><span class="s">latest prices</span></div>
+    <div class="panel stat tap" ${tap("div")}><span class="eyebrow">Dividends / year</span><span class="v goldc">${R(totDiv)}</span><span class="s">${R(totDiv/12, 2)} a month on average</span></div>
     <div class="panel stat"><span class="eyebrow">Portfolio yield</span><span class="v">${totVal ? pct(totDiv/totVal*100) : "—"}</span><span class="s">trailing 12 months</span></div>
-    <div class="panel stat"><span class="eyebrow">Next payment</span><span class="v">${ev[0] ? fmtDate(ev[0].pay || ev[0].ex, {day:"numeric", month:"short"}) : "—"}</span><span class="s">${ev[0] ? esc(ev[0].sym) + " · " + money(ev[0].amount * ev[0].shares,"USD",2) : "refresh to load dates"}</span></div>
+    <div class="panel stat"><span class="eyebrow">Next payment</span><span class="v">${ev[0] ? fmtDate(ev[0].pay || ev[0].ex, {day:"numeric", month:"short"}) : "—"}</span><span class="s">${ev[0] ? esc(ev[0].sym) + " · " + R((toZar(ev[0].amount, curOfSym(ev[0].sym)) || 0) * ev[0].shares, 2) : "add dividend dates to see this"}</span></div>
   </div>
-  <div class="panel"><div class="panel-head"><h3>My dividend shares</h3><button class="btn" data-act="addHolding">+ Add holding</button></div>
-    <div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th class="n">Shares</th><th class="n">Price</th><th class="n">Value</th><th class="n">Yield</th><th>Pays</th><th class="n">Dividends / yr</th><th></th></tr></thead>
-    <tbody>${hold || `<tr><td colspan="8" class="empty">No holdings yet. Add a ticker such as KO, JNJ or O.</td></tr>`}</tbody></table></div>
-    <p class="small muted" style="margin:0">Use US tickers. Each refresh uses two lookups per share (price and dividends) and is saved for 12 hours.</p>
+  <div class="panel"><div class="panel-head"><h3>My dividend shares</h3><div class="row" style="gap:6px"><button class="btn" data-act="addHolding" data-m="JSE">+ JSE share</button><button class="btn" data-act="addHolding" data-m="US">+ US share</button></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th>Market</th><th class="n">Shares</th><th class="n">Price</th><th class="n">Value</th><th class="n">Yield</th><th>Pays</th><th class="n">Dividends / yr</th><th></th></tr></thead>
+    <tbody>${hold || `<tr><td colspan="9" class="empty">No holdings yet. Add a JSE or US share.</td></tr>`}</tbody></table></div>
+    <p class="small muted" style="margin:0"><b>JSE shares:</b> Alpha Vantage doesn't cover the JSE, so type the price in rand from your broker's app (JSE prices are often shown in cents: 34 500c = R345.00) and add dividends below. <b>US shares</b> load live; each refresh uses two of your 25 daily lookups per share and is saved for 12 hours.</p>
   </div>
+  ${watchPanel()}
   <div class="grid g2">
     <div class="panel"><div class="panel-head"><h3>Dividend calendar · next 12 months</h3></div>
       <p class="small muted" style="margin:0">Own the share before the <b>ex-dividend date</b> to receive the payment. “Announced” dates come from the company; “Estimated” dates follow its usual schedule.</p>
@@ -1308,16 +1363,18 @@ function viewInvest(){
       ${look}</div>
   </div>
   <div class="panel"><h3>Dividend dates you've added</h3>
-    <p class="small muted" style="margin:0">Seen a dividend announced in your broker's app or on the company's site? Add it here and it shows in your calendar and income totals.</p>
+    <p class="small muted" style="margin:0">For JSE shares, find dividends in your broker's app or the company's SENS announcement: the amount per share (often in cents, e.g. 850c = R8.50), the last day to trade, the ex-dividend date and the pay date. Add past payments too: a year of history gives the yield and the usual schedule.</p>
     <form class="row" data-act="addDiv">
-      <label class="field">Ticker<input name="sym" id="md-sym" required placeholder="e.g. KO" style="text-transform:uppercase"></label>
+      <label class="field">Ticker<input name="sym" id="md-sym" required placeholder="e.g. ABC" style="text-transform:uppercase" list="md-tickers"></label>
+      <datalist id="md-tickers">${S.holdings.concat(S.watch || []).filter(h => h.symbol).map(h => `<option value="${esc(h.symbol)}">`).join("")}</datalist>
       <label class="field">Ex-dividend date<input name="ex" id="md-ex" type="date" required></label>
       <label class="field">Pay date<input name="pay" id="md-pay" type="date"></label>
-      <label class="field">Per share (USD)<input name="amount" id="md-amt" type="number" step="any" min="0" required placeholder="0.00"></label>
+      <label class="field">Per share<input name="amount" id="md-amt" type="number" step="any" min="0" required placeholder="0.00"></label>
+      <label class="field">In<select name="cur" id="md-cur"><option value="ZAR">Rand (R)</option><option value="ZAc">Cents (c)</option><option value="USD">US$</option></select></label>
       <button class="btn primary" type="submit">Add date</button>
     </form>
     ${(S.manualDivs || []).length ? `<div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th>Ex-dividend</th><th>Paid</th><th class="n">Per share</th><th></th></tr></thead><tbody>
-      ${S.manualDivs.slice().sort((a,b) => b.ex.localeCompare(a.ex)).map(m => `<tr><td><b>${esc(m.sym)}</b></td><td>${fmtDate(m.ex)}</td><td>${fmtDate(m.pay)}</td><td class="n num">${money(num(m.amount),"USD",2)}</td><td><button class="btn ghost" data-act="del" data-c="manualDivs" data-id="${m.id}" aria-label="Remove">✕</button></td></tr>`).join("")}
+      ${S.manualDivs.slice().sort((a,b) => b.ex.localeCompare(a.ex)).map(m => `<tr><td><b>${esc(m.sym)}</b></td><td>${fmtDate(m.ex)}</td><td>${fmtDate(m.pay)}</td><td class="n num">${(m.cur || "USD") === "ZAR" ? R(num(m.amount), 2) : money(num(m.amount), "USD", 2)}</td><td><button class="btn ghost" data-act="del" data-c="manualDivs" data-id="${m.id}" aria-label="Remove">✕</button></td></tr>`).join("")}
       </tbody></table></div>` : ""}
   </div>
   <div class="grid g2">
@@ -1782,6 +1839,152 @@ async function loadScLan(){
   catch(e){ box.textContent = "Open this page on your iPhone (using the phone link from Setup) to see your Shortcut link."; }
 }
 
+/* ---------- JSE dividend watchlist: compares shares you choose; it never picks shares for you ---------- */
+const DIV_TAX = 0.20;   // South African dividends withholding tax (not charged inside a tax-free savings account)
+function lastDayToTrade(ex){ const d = new Date(ex + "T00:00:00"); do { d.setDate(d.getDate() - 1); } while (d.getDay() === 0 || d.getDay() === 6); return ymd(d); }
+function watchInfo(w){
+  const p = divProfile(w.symbol), q = priceOf(w.symbol), price = q ? q.price : null;
+  const ev = upcomingEvents(w.symbol, 0).filter(e => e.ex >= todayISO()).sort((a, b) => a.ex.localeCompare(b.ex))[0] || null;
+  const years = p && p.history.length ? new Date().getFullYear() - Number(p.history[p.history.length - 1].ex.slice(0, 4)) + 1 : 0;
+  return { p, price, ev, years, yieldPct: p && price ? p.ttm / price * 100 : null, soon: ev && daysBetween(todayISO(), ev.ex) <= 35 };
+}
+function watchPanel(){
+  const amt = num(S.settings.watchAmt) || 10000;
+  const rows = (S.watch || []).map(w => ({ w, i:watchInfo(w) })).sort((a, b) => (a.i.ev ? a.i.ev.ex : "9999").localeCompare(b.i.ev ? b.i.ev.ex : "9999"));
+  return `<div class="panel"><div class="panel-head"><h3>JSE dividend watchlist</h3><span class="chip gold">Rand</span></div>
+    <p class="small muted" style="margin:0">Add JSE shares you're curious about, with their price and dividend history, and compare them side by side: yield, how many years they've paid and which go ex-dividend in the next month. This doesn't recommend shares. It's information to help you decide, and an FSCA-registered financial advisor can give personal advice.</p>
+    <form class="row" data-act="addWatch">
+      <label class="field">JSE ticker<input name="sym" id="w-sym" required placeholder="e.g. ABC" style="text-transform:uppercase"></label>
+      <label class="field">Company<input name="name" id="w-name" placeholder="Name (optional)"></label>
+      <label class="field">Price (R)<input name="price" id="w-price" type="number" step="any" min="0" placeholder="e.g. 345.00"></label>
+      <button class="btn primary" type="submit">Watch it</button>
+    </form>
+    ${rows.length ? `<label class="field" style="max-width:260px">If I invested (R)<input type="number" step="any" min="0" data-set="watchAmt" id="watchAmt" value="${amt}"></label>
+    <div class="tbl-wrap"><table><thead><tr><th>Share</th><th class="n">Price</th><th class="n">Last 12 months</th><th class="n">Yield</th><th>Pays</th><th>Next ex-date</th><th class="n">${R(amt)} would get</th><th></th></tr></thead><tbody>
+    ${rows.map(({ w, i }) => { const sh = i.price ? Math.floor(amt / i.price) : 0, nextAmt = i.ev ? sh * i.ev.amount : 0;
+      return `<tr><td><b>${esc(w.symbol)}</b>${w.name ? `<div class="small muted">${esc(w.name)}</div>` : ""}</td>
+        <td class="n"><input class="cell" type="number" step="any" min="0" data-c="watch" data-id="${w.id}" data-f="price" value="${num(w.price) || ""}" placeholder="R" aria-label="Price in rand"></td>
+        <td class="n num">${i.p ? R(i.p.ttm, 2) : `<span class="muted small">add dividends</span>`}</td>
+        <td class="n num">${i.yieldPct !== null ? pct(i.yieldPct) : "—"}</td>
+        <td>${i.p ? `<span class="chip">${i.p.freq}</span>${i.years ? `<div class="small muted">${i.years} yr${i.years === 1 ? "" : "s"} of payments</div>` : ""}` : "—"}</td>
+        <td>${i.ev ? `${fmtDate(i.ev.ex, { day:"numeric", month:"short" })} ${i.soon ? `<span class="chip good">Next month</span>` : ""}<div class="small muted">${i.ev.est ? "Estimated" : "Announced"} · buy by ${fmtDate(lastDayToTrade(i.ev.ex), { day:"numeric", month:"short" })}</div>` : "—"}</td>
+        <td class="n num">${sh ? `${sh} shares<div class="small muted">${i.ev ? R(nextAmt, 2) + " next payment · " + R(nextAmt * (1 - DIV_TAX), 2) + " after tax" : ""}</div>` : "—"}</td>
+        <td style="white-space:nowrap"><button class="btn ghost" data-act="watchToHold" data-id="${w.id}" title="I bought it: move to my holdings" aria-label="Add ${esc(w.symbol)} to my holdings" style="color:var(--good)">+</button><button class="btn ghost" data-act="del" data-c="watch" data-id="${w.id}" aria-label="Stop watching">✕</button></td></tr>`; }).join("")}
+    </tbody></table></div>
+    <p class="small muted" style="margin:0">“After tax” takes off South Africa's 20% dividends tax, which doesn't apply inside a tax-free savings account. “Buy by” is the business day before the ex-date; check the company's SENS announcement for the exact last day to trade, as public holidays move it.</p>`
+    : `<p class="empty">Nothing on your watchlist yet. Add a JSE share, then add its recent dividends under “Dividend dates you've added” below.</p>`}
+  </div>`;
+}
+
+/* ---------- Month-end statement: the last 30 days, what changed, where to improve ---------- */
+function statementData(){
+  normalize();
+  const today = todayISO(), from = isoAdd(today, -29), t = totals(), A = assetTotals(), sim = simulate(S.debts, S.extraPayment, S.strategy);
+  const inWin = d => d && d >= from && d <= today;
+  // Comparison point: the newest snapshot from at least 30 days ago, otherwise the oldest one that's a week old or more.
+  const old = (S.snaps || []).filter(s => s.d <= isoAdd(today, -30)).pop() || (S.snaps || []).find(s => daysBetween(s.d, today) >= 7) || null;
+  const hustle = sum(Object.keys(S.hustle.days).filter(inWin), k => dayAmt(k));
+  const divsRecvZ = sum(S.holdings, h => { const I = holdingInfo(h); return I.p ? sum(I.p.history.filter(x => inWin(x.pay || x.ex)), x => (toZar(x.amount, I.cur) || 0) * I.sh) : 0; });
+  const divsNextZ = sum(S.holdings, h => sum(upcomingEvents(h.symbol, num(h.shares)).filter(e => (e.pay || e.ex) > today && (e.pay || e.ex) <= isoAdd(today, 30)), e => (toZar(e.amount, curOfSym(e.sym)) || 0) * e.shares));
+  const contributed = sum(S.goals.flatMap(g => (g.contributions || []).filter(c => inWin(c.date))), c => c.amount);
+  const portZ = portfolioZar(), debtNow = t.debtTotal, goalsNow = sum(S.goals, g => goalStats(g).saved);
+  const incomeIn = [
+    ["Regular income", t.income, "Monthly income from your budget"],
+    ["Hustle", hustle, "What you logged in the last 30 days"],
+    ["Asset income", A.monthly, "Monthly income from your assets"],
+    ["Dividends received", zarToHome(divsRecvZ) || 0, "Payments dated in the last 30 days"]];
+  const madeTotal = sum(incomeIn, r => r[1]);
+  const spent = t.spent, debtPay = t.debtPay, kept = madeTotal - spent - debtPay;
+  const debtPaid = old ? old.debt - debtNow : (S.debts.length && sim.series.length > 1 ? sim.series[0] - sim.series[1] : 0);
+  const mInt = sum(S.debts, d => num(d.balance) * num(d.apr) / 1200);
+  const netNow = goalsNow + (zarToHome(portZ) || 0) + A.value - debtNow;
+  const netOld = old ? old.goals + (old.portZ !== null && old.portZ !== undefined ? (zarToHome(old.portZ) || 0) : (zarToHome(portZ) || 0)) + old.assets - old.debt : null;
+  return { today, from, t, A, sim, old, hustle, divsRecvZ, divsNextZ, contributed, portZ, debtNow, goalsNow, incomeIn, madeTotal, spent, debtPay, kept,
+    debtPaid, debtPaidEst: !old, mInt, netNow, netChange: netOld === null ? null : netNow - netOld,
+    portChange: old && old.portZ !== null && old.portZ !== undefined ? portZ - old.portZ : null, assetChange: old ? A.value - old.assets : null };
+}
+/* Where to improve: every pointer carries an estimate of what it's worth a month, and the list is ranked by that. */
+function improvePointers(D){
+  const t = D.t, inc = t.income || 1, P = [];
+  const over = S.expenses.filter(e => num(e.spent) > num(e.budget));
+  over.forEach(e => P.push({ area:"Budget", t:`${esc(e.name)} went ${money(num(e.spent) - num(e.budget))} over budget.`, b:`Planned ${money(num(e.budget))}, spent ${money(num(e.spent))}. Either hold it to plan next month, or raise the budget and cut a want to match.`, v:num(e.spent) - num(e.budget) }));
+  if (t.wants / inc > 0.3) P.push({ area:"Budget", t:`Wants take ${pct(t.wants / inc * 100)} of your income.`, b:`Bringing them to 30% frees ${money(t.wants - inc * 0.3)} a month for debt or investing.`, v:t.wants - inc * 0.3 });
+  if (D.kept < 0) P.push({ area:"Cash flow", t:`You spent ${money(-D.kept)} more than you made.`, b:"Cut the biggest wants first and pause extra debt payments until the month balances.", v:-D.kept });
+  if (t.left > 0 && S.debts.length){ const base = D.sim, boost = simulate(S.debts, num(S.extraPayment) + t.left, S.strategy);
+    if (!base.never && !boost.never && base.months > boost.months) P.push({ area:"Debt", t:`Send the ${money(t.left)} you don't use to debt.`, b:`You'd be debt-free ${base.months - boost.months} months sooner and save ${money(base.totalInterest - boost.totalInterest)} in interest.`, v:(base.totalInterest - boost.totalInterest) / Math.max(1, base.months) }); }
+  const top = S.debts.filter(d => num(d.balance) > 0).sort((a, b) => num(b.apr) - num(a.apr))[0];
+  if (top && num(top.apr) >= 12) P.push({ area:"Debt", t:`${esc(top.name)} costs ${money(num(top.balance) * num(top.apr) / 1200)} a month in interest.`, b:`At ${pct(num(top.apr))} it's your most expensive debt. Every extra rand there earns you ${pct(num(top.apr))}, more than most investments.`, v:num(top.balance) * num(top.apr) / 1200 });
+  const H = S.hustle, tg = num(H.target);
+  if (tg){ const days = Array.from({ length:30 }, (_, i) => isoAdd(D.today, -i)), miss = days.filter(d => hustleStatus(d) === "miss");
+    const short = sum(miss, d => Math.max(0, tg - dayAmt(d)));
+    if (short > 0) P.push({ area:"Hustle", t:`Missed days cost ${money(short)} this month.`, b:`You missed your ${money(tg)} target on ${miss.length} day${miss.length === 1 ? "" : "s"}. Check your notes on red days for what got in the way, and plan those days ahead.`, v:short }); }
+  S.goals.forEach(g => { const s = goalStats(g); if (!s.done && s.perMonth !== null && s.avg < s.perMonth) P.push({ area:"Goals", t:`${esc(g.name)} needs ${money(s.perMonth - s.avg)} more a month.`, b:`You average ${money(s.avg)} but need ${money(s.perMonth)} to reach ${money(s.target)} by ${fmtDate(g.deadline)}.`, v:s.perMonth - s.avg }); });
+  const idle = S.assets.filter(a => !(num(a.monthly) > 0) && num(a.value) > 0);
+  if (idle.length) P.push({ area:"Assets", t:`${idle.length === 1 ? esc(idle[0].name) + " earns" : idle.length + " assets earn"} nothing.`, b:"Renting, lending or selling something that sits idle turns it into income.", v:sum(idle, a => a.value) * 0.005 });
+  const perH = S.holdings.map(h => holdingInfo(h).ttmZ || 0), totD = sum(perH, x => x);
+  if (totD && Math.max(...perH) / totD > 0.5) P.push({ area:"Investing", t:"Most of your dividends come from one share.", b:"If that company cuts its dividend, most of your income goes with it. Spreading across more companies or a dividend ETF lowers that risk.", v:(zarToHome(Math.max(...perH)) || 0) / 12 * 0.25 });
+  return P.sort((a, b) => b.v - a.v);
+}
+function viewStatement(){
+  const D = statementData(), t = D.t;
+  const period = `${fmtDate(D.from, { day:"numeric", month:"short" })} – ${fmtDate(D.today, { day:"numeric", month:"short", year:"numeric" })}`;
+  const rate = D.madeTotal ? D.kept / D.madeTotal * 100 : 0;
+  const since = D.old ? `since ${fmtDate(D.old.d, { day:"numeric", month:"short" })}` : "";
+  const P = improvePointers(D);
+  const opp = S.holdings.concat(S.watch || []).filter(h => h.symbol).flatMap(h => upcomingEvents(h.symbol, S.holdings.includes(h) ? num(h.shares) : 0).map(e => Object.assign(e, { held:S.holdings.includes(h) })))
+    .filter(e => e.ex >= D.today && e.ex <= isoAdd(D.today, 35)).sort((a, b) => a.ex.localeCompare(b.ex));
+  const amt = num(S.settings.watchAmt) || 10000;
+  const row = (l, v, note, cls) => `<tr><td>${l}${note ? `<div class="small muted">${note}</div>` : ""}</td><td class="n num ${cls || ""}">${v}</td></tr>`;
+  const sign = v => (v > 0 ? "+" : "") ;
+  return `
+  <div class="page-head"><div><div class="eyebrow">Month-end statement · ${period}</div><h2>Your month in review</h2>
+  <p>What came in, what went out, how far your debt fell and how your investments and assets moved over the last 30 days, with where to improve next month.</p></div>
+  <button class="btn no-print" data-act="print">Save as PDF</button></div>
+  ${heroBlock({ p:Math.max(0, rate), plabel:"Kept", eyebrow:"Kept this period", big:money(D.kept), cls:D.kept >= 0 ? "pos" : "neg",
+    sub:`after spending and debt payments · ${pct(rate)} of what you made`,
+    readouts:[["Made", money(D.madeTotal), "pos"], ["Spent", money(D.spent)], ["Debt paid off", money(D.debtPaid) + (D.debtPaidEst ? " (est.)" : ""), D.debtPaid >= 0 ? "pos" : "neg"],
+      ["Net worth change", D.netChange === null ? "Tracking from today" : sign(D.netChange) + money(D.netChange), D.netChange === null ? "" : D.netChange >= 0 ? "pos" : "neg"]] })}
+  ${!D.old ? `<p class="note" style="margin:0">The app now saves a snapshot of your debt, investments and assets every day. Exact 30-day changes appear from ${fmtDate(isoAdd(((S.snaps || [])[0] || { d:D.today }).d, 30), { day:"numeric", month:"long" })}. Until then, debt paid off is estimated from your payoff plan.</p>` : ""}
+  <div class="grid g2">
+    <div class="panel"><h3>Money in</h3><div class="tbl-wrap"><table><tbody>
+      ${D.incomeIn.map(([l, v, n]) => row(l, money(v), n)).join("")}</tbody><tfoot>${row("Total made", money(D.madeTotal), "", "pos")}</tfoot></table></div>
+      <p class="small muted" style="margin:0">If your hustle is also listed as income on the Budget page, it's counted twice here. Keep it in one place.</p></div>
+    <div class="panel"><h3>Money out</h3><div class="tbl-wrap"><table><tbody>
+      ${row("Needs", money(sum(S.expenses.filter(e => e.kind === "need"), e => e.spent)), "Spent so far this month")}
+      ${row("Wants", money(sum(S.expenses.filter(e => e.kind === "want"), e => e.spent)), "")}
+      ${row("Savings categories", money(sum(S.expenses.filter(e => e.kind === "save"), e => e.spent)), "")}
+      ${row("Debt payments", money(D.debtPay), "Minimums plus your extra payment")}</tbody>
+      <tfoot>${row("Total out", money(D.spent + D.debtPay), `Budget was ${money(t.budgeted + D.debtPay)}`, D.spent > t.budgeted ? "neg" : "")}</tfoot></table></div>
+      ${D.contributed ? `<p class="small muted" style="margin:0">You also moved ${money(D.contributed)} into your goals.</p>` : ""}</div>
+  </div>
+  <div class="grid g4">
+    <div class="panel stat"><span class="eyebrow">Debt paid off</span><span class="v ${D.debtPaid >= 0 ? "pos" : "neg"}">${money(D.debtPaid)}</span><span class="s">${D.debtPaidEst ? "estimated from your plan" : since} · ${money(D.debtNow)} left${S.debts.length && !D.sim.never ? " · free " + monthLabel(addMonths(D.sim.months)) : ""}</span></div>
+    <div class="panel stat"><span class="eyebrow">Investments</span><span class="v">${R(D.portZ)}</span><span class="s">${D.portChange === null ? "growth tracked from today" : `${sign(D.portChange)}${R(D.portChange)} ${since}`} · ${R(D.divsRecvZ, 2)} dividends received</span></div>
+    <div class="panel stat"><span class="eyebrow">Assets</span><span class="v">${money(D.A.value)}</span><span class="s">${D.assetChange === null ? "change tracked from today" : `${sign(D.assetChange)}${money(D.assetChange)} ${since}`} · earn ${money(D.A.monthly)}/month</span></div>
+    <div class="panel stat"><span class="eyebrow">Hustle</span><span class="v pos">${money(D.hustle)}</span><span class="s">last 30 days${num(S.hustle.target) ? " · target " + money(num(S.hustle.target) * 30) : ""}</span></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Where to improve next month</h3><span class="small muted">Ranked by what each is worth to you a month</span></div>
+    ${P.length ? `<ol class="tips">${P.slice(0, 6).map(x => `<li><b>${x.t} <span class="chip">${x.area}</span></b><span>${x.b}</span></li>`).join("")}</ol>` : `<p class="empty">Nothing stands out this month. Keep doing what you're doing.</p>`}
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Dividends in the next month</h3><span class="chip gold">Rand</span></div>
+    <p class="small muted" style="margin:0">JSE and US shares from your holdings and watchlist that go ex-dividend in the next 35 days. These are facts from the dates you've added, not recommendations: whether a share suits you depends on your goals, risk and costs. An FSCA-registered financial advisor can give personal advice.</p>
+    ${opp.length ? `<div class="tbl-wrap"><table><thead><tr><th>Share</th><th>Ex-date</th><th>Buy by</th><th>Paid</th><th class="n">Per share</th><th class="n">You'd receive</th></tr></thead><tbody>
+      ${opp.map(e => { const per = toZar(e.amount, curOfSym(e.sym)), q = priceOf(e.sym), pz = q ? toZar(q.price, curOfSym(e.sym)) : null, sh = e.held ? e.shares : (pz ? Math.floor(amt / pz) : 0);
+        return `<tr><td><b>${esc(e.sym)}</b> <span class="chip">${mktOf(e.sym)}</span><div class="small muted">${e.held ? "You own " + e.shares : "Watchlist"} · ${e.est ? "estimated" : "announced"}</div></td>
+          <td>${fmtDate(e.ex, { day:"numeric", month:"short" })}</td><td>${fmtDate(lastDayToTrade(e.ex), { day:"numeric", month:"short" })}</td><td>${fmtDate(e.pay, { day:"numeric", month:"short" })}</td>
+          <td class="n num">${R(per, 2)}</td><td class="n num goldc">${sh && per !== null ? R(per * sh, 2) + `<div class="small muted">${e.held ? "" : sh + " shares for " + R(amt) + " · "}${R(per * sh * (1 - DIV_TAX), 2)} after tax</div>` : "—"}</td></tr>`; }).join("")}
+    </tbody></table></div>` : `<p class="empty">No ex-dividend dates in the next 35 days. Add JSE shares to your watchlist on the Invest page, with their dividend history, to see upcoming dates here.</p>`}
+    <ul class="sc-steps" style="list-style:disc">
+      <li><b>Timing:</b> you must own the share by the last day to trade before the ex-date to get the dividend.</li>
+      <li><b>Tax:</b> South African dividends lose 20% to dividends tax, except inside a tax-free savings account, which makes a TFSA a natural home for dividend shares.</li>
+      <li><b>Don't chase yield:</b> a very high yield often means the share price fell for a reason. Years of steady or rising payments matter more.</li>
+      <li><b>Spread it:</b> several companies in different sectors, or a JSE dividend ETF, means one cut can't sink your income.</li>
+      <li><b>Costs:</b> broker fees on small purchases can eat a whole dividend. Buy in larger, less frequent amounts.</li>
+    </ul>
+    <p class="small muted" style="margin:0">Your expected dividends from shares you already own in the next 30 days: <b class="goldc">${R(D.divsNextZ, 2)}</b>.</p>
+  </div>`;
+}
+
 function viewSettings(){
   const st = S.settings, curs = ["USD","ZAR","EUR","GBP","AUD","CAD","NZD","INR","JPY","CHF","SEK","NOK","DKK","PLN","BRL","MXN","SGD","HKD","CNY","KRW","TRY","ILS","PHP","THB","IDR","MYR","CZK","HUF","RON","ISK"];
   return `
@@ -1899,27 +2102,27 @@ function detailGoals(){
 function detailDiv(){
   const ev = S.holdings.flatMap(h => upcomingEvents(h.symbol, num(h.shares)));
   const months = []; for (let i = 0; i < 12; i++){ const d = addMonths(i); months.push({ key:ymKey(d), label:d.toLocaleDateString(undefined, { month:"short" }), v:0 }); }
-  ev.forEach(e => { const m = months.find(x => x.key === (e.pay || e.ex).slice(0, 7)); if (m) m.v += e.amount * e.shares; });
-  const per = S.holdings.map(h => ({ label:h.symbol || "—", value:(divProfile(h.symbol)?.ttm || 0) * num(h.shares) })).filter(r => r.value > 0).map(r => Object.assign(r, { text:money(r.value, "USD", 2), cls:"gold" }));
-  const totVal = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)), totDiv = sum(per, r => r.value), y = totVal ? totDiv / totVal : 0, fx = fxCached();
+  ev.forEach(e => { const m = months.find(x => x.key === (e.pay || e.ex).slice(0, 7)); if (m) m.v += (toZar(e.amount, curOfSym(e.sym)) || 0) * e.shares; });
+  const per = S.holdings.map(h => ({ label:h.symbol || "—", value:holdingInfo(h).ttmZ || 0 })).filter(r => r.value > 0).map(r => Object.assign(r, { text:R(r.value, 2), cls:"gold" }));
+  const totVal = portfolioZar(), totDiv = sum(per, r => r.value), y = totVal ? totDiv / totVal : 0;
   const next = ev.filter(e => e.ex >= todayISO()).sort((a, b) => a.ex.localeCompare(b.ex))[0];
   const L = [];
-  if (!totDiv) L.push({ t:"No dividend data yet.", b:"Add holdings on the Invest page, then press Refresh market data." });
-  if (y > 0) L.push({ t:`To earn ${money(100, "USD")} a month at your ${pct(y * 100)} yield`, b:`you'd need about ${money(1200 / y, "USD")} invested. Each ${money(1000, "USD")} you add pays roughly ${money(1000 * y / 12, "USD", 2)} a month.` });
-  if (next) L.push({ t:`Next ex-dividend date: ${esc(next.sym)} on ${fmtDate(next.ex)}.`, b:`Own the shares before that date to get the ${money(next.amount, "USD", 2)} per share payment${next.est ? " (date estimated)" : ""}.` });
+  if (!totDiv) L.push({ t:"No dividend data yet.", b:"Add holdings on the Invest page, then press Refresh market data. For JSE shares, add their dividends yourself." });
+  if (y > 0) L.push({ t:`To earn ${R(1000)} a month at your ${pct(y * 100)} yield`, b:`you'd need about ${R(12000 / y)} invested. Each ${R(10000)} you add pays roughly ${R(10000 * y / 12, 2)} a month, before dividends tax.` });
+  if (next) L.push({ t:`Next ex-dividend date: ${esc(next.sym)} on ${fmtDate(next.ex)}.`, b:`Own the shares by the last day to trade before that date to get the ${R(toZar(next.amount, curOfSym(next.sym)), 2)} per share payment${next.est ? " (date estimated)" : ""}.` });
   if (per.length && totDiv && Math.max(...per.map(r => r.value)) / totDiv > 0.5) L.push({ t:"Spread your income out.", b:"More than half your dividends come from one company. A dividend ETF, or a few more holdings in different sectors, means one cut can't hurt you as much." });
   L.push({ t:"Reinvest while you're building.", b:"Turning on dividend reinvestment (DRIP) at your broker buys more shares automatically, so payments compound." });
   L.push({ t:"Look for steady growers, not just high yields.", b:"A very high yield can mean the share price fell for a reason. Years of steady or rising payments are a better sign." });
-  return { title:"Dividend income · " + money(totDiv, "USD") + " / yr", link:["#invest", "Open invest"],
-    body: sec("Expected payments · next 12 months (USD)", colChart(months.map(m => m.v), months.map(m => m.label), "var(--gold)", v => money(v, "USD", 0))
-        + `<p class="small muted" style="margin:0">Includes estimated dates.${fx && S.settings.currency !== "USD" ? " Total ≈ " + money(sum(months, m => m.v) * fx) + "." : ""}</p>`)
+  return { title:"Dividend income · " + R(totDiv) + " / yr", link:["#invest", "Open invest"],
+    body: sec("Expected payments · next 12 months (rand)", colChart(months.map(m => m.v), months.map(m => m.label), "var(--gold)", v => R(v, 0))
+        + `<p class="small muted" style="margin:0">Includes estimated dates. Total ${R(sum(months, m => m.v))}, before 20% dividends tax on South African shares held outside a tax-free account.</p>`)
       + (per.length ? sec("By holding · per year", hbars(per)) : "") + sec("Ways to improve", tips(L)) };
 }
 
 function detailNet(){
   const t = totals(), fx = fxCached(), sim = simulate(S.debts, S.extraPayment, S.strategy);
   const gSaved = sum(S.goals, g => goalStats(g).saved), gAvg = sum(S.goals, g => goalStats(g).avg);
-  const port = sum(S.holdings, h => (priceOf(h.symbol)?.price || 0) * num(h.shares)) * (fx || 0) + assetTotals().value;
+  const port = (zarToHome(portfolioZar()) || 0) + assetTotals().value;
   const N = 36, debtS = [], assetS = [];
   for (let i = 0; i <= N; i++){ debtS.push(i < sim.series.length ? sim.series[i] : (sim.never ? sim.series[sim.series.length - 1] : 0)); assetS.push(gSaved + gAvg * i + port); }
   const cross = assetS.findIndex((a, i) => a >= debtS[i]);
@@ -2009,14 +2212,14 @@ async function loadPhone(){
 /* ---------- render & events ---------- */
 const views = { overview:viewOverview, budget:withSub("budget", budgetOverview, viewBudget), debt:withSub("debt", debtOverview, viewDebt),
   hustle:viewHustle, goals:withSub("goals", goalsOverview, viewGoals), assets:withSub("assets", assetsOverview, viewAssets),
-  invest:viewInvest, status:viewStatus, setup:viewSettings };
+  invest:viewInvest, statement:viewStatement, status:viewStatus, setup:viewSettings };
 function route(){ const h = location.hash.slice(1); return views[h] ? h : "overview"; }
 const SKINS = {
   stark:    { name:"Stark Gold",    tag:"Onyx black with gold and emerald. Pages rise in.", meta:"#050605" },
   vault:    { name:"Emerald Vault", tag:"Deep private-bank green with champagne gold. Pages settle in like a vault door.", meta:"#03140d" },
   platinum: { name:"Black Card",    tag:"Midnight with platinum, sapphire and rose gold. Pages glide sideways.", meta:"#06070c" }
 };
-const ORDER = ["overview","budget","debt","hustle","goals","assets","invest","status","setup"];
+const ORDER = ["overview","statement","budget","debt","hustle","goals","assets","invest","status","setup"];
 const reduceMotion = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches:false };
 let lastRoute = null, enterTimer, lastHTML = "", navTimer;
 /* A selector that finds "the same field" again after the page is redrawn. */
@@ -2187,7 +2390,14 @@ view.addEventListener("submit", async e => {
     const sym = String(fd.get("sym") || "").trim().toUpperCase(), ex = String(fd.get("ex") || "");
     if (!sym || !ex) return;
     S.manualDivs = S.manualDivs || [];
-    S.manualDivs.push({ id:uid(), sym, ex, pay:String(fd.get("pay") || ""), amount:num(fd.get("amount")) });
+    const unit = String(fd.get("cur") || "ZAR"), amt = num(fd.get("amount"));
+    S.manualDivs.push({ id:uid(), sym, ex, pay:String(fd.get("pay") || ""), amount: unit === "ZAc" ? amt / 100 : amt, cur: unit === "USD" ? "USD" : "ZAR" });
+    save(); render();
+  }
+  if (f.dataset.act === "addWatch"){
+    const sym = String(fd.get("sym") || "").trim().toUpperCase(); if (!sym) return;
+    S.watch = S.watch || [];
+    if (!S.watch.some(w => w.symbol === sym)) S.watch.push({ id:uid(), symbol:sym, name:String(fd.get("name") || "").trim(), market:"JSE", price:num(fd.get("price")) || "" });
     save(); render();
   }
   if (f.dataset.act === "lookup"){
@@ -2207,8 +2417,11 @@ view.addEventListener("click", async e => {
   if (a === "addExpense") add("expenses", {name:"New category", kind:"need", budget:0, spent:0});
   if (a === "addDebt") add("debts", {name:"New debt", balance:0, apr:0, minPay:0});
   if (a === "addGoal") add("goals", {name:"New goal", target:1000, deadline:new Date(Date.now()+365*86400000).toISOString().slice(0,10), contributions:[]});
-  if (a === "addHolding") add("holdings", {symbol:"", shares:0});
+  if (a === "addHolding") add("holdings", {symbol:"", shares:0, market: b.dataset.m === "US" ? "US" : "JSE"});
+  if (a === "watchToHold"){ const w = (S.watch || []).find(x => x.id === b.dataset.id);
+    if (w && !S.holdings.some(h => (h.symbol || "").toUpperCase() === w.symbol)) add("holdings", { symbol:w.symbol, shares:0, market:"JSE", price:w.price }); }
   if (a === "addAsset") add("assets", {name:"New asset", type:"Other", cost:0, value:0, monthly:0});
+  if (a === "print") window.print();
   if (a === "sub" && subTab[b.dataset.tab] && b.dataset.v !== subTab[b.dataset.tab]){ subTab[b.dataset.tab] = b.dataset.v;
     document.documentElement.dataset.dir = b.dataset.v === "detail" ? "fwd" : "back";
     lastRoute = null; render(); window.scrollTo(0, 0); }
@@ -2232,7 +2445,7 @@ view.addEventListener("click", async e => {
   if (a === "refresh"){
     busy = true; mktErr = ""; render();
     const errs = [];
-    for (const h of S.holdings.filter(h => h.symbol)){
+    for (const h of S.holdings.filter(h => h.symbol && h.market !== "JSE")){
       for (const fn of ["GLOBAL_QUOTE", "DIVIDENDS"]){ try { await av(fn, h.symbol, true); } catch(err){ errs.push(err.message); } }
     }
     await fxRate();
@@ -2251,6 +2464,7 @@ function bootStep(pct, msg){
 async function finishBoot(){
   const sp = document.getElementById("splash"); if (!sp || sp.classList.contains("out")) return;
   bootStep(100, "Ready");
+  if (!S.snaps || !S.snaps.some(s => s.d === todayISO())) save();   // record today's snapshot once prices are in
   await wait(reduceMotion.matches ? 0 : 350);
   lastRoute = null; render();                 // replay the first page's entrance as the splash lifts
   sp.classList.add("out");
@@ -2259,7 +2473,7 @@ async function finishBoot(){
   setTimeout(() => document.getElementById("topline").classList.add("collapsed"), 3000);
 }
 const marketLoad = async () => {
-  for (const h of S.holdings.filter(h => h.symbol)){
+  for (const h of S.holdings.filter(h => h.symbol && h.market !== "JSE")){
     for (const fn of ["GLOBAL_QUOTE", "DIVIDENDS"]) if (!cached(fn, h.symbol)) { try { await av(fn, h.symbol); } catch(e){ mktErr = e.message; } }
   }
   render();
